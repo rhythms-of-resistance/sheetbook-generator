@@ -1,5 +1,5 @@
 {
-  "name": "ror-sheetbook-backend",
+  "name": "ror-sheetbook-server",
   "version": "1.0.0",
   "scripts": {
     "dev-server": "ts-node ./src/server.ts"

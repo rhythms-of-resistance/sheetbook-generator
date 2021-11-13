@@ -1,0 +1,10 @@
+This repository contains software to convert the [RoR sheetbook](https://github.com/rhythms-of-resistance/sheetbook) files to PDFs:
+
+* [ror-sheetbook-generator](./generator/) is a Node.js library and CLI to generate the PDFs
+* [ror-sheetbook-server](./server/) is a web application that provides a graphical interface to generate the PDFs, available on https://sheets.rhythms-of-resistance.org/.
+
+The sheetbook generator is written in [TypeScript](https://www.typescriptlang.org/) and relies on various open-source applications to generate the PDFs, in particular [poppler](https://poppler.freedesktop.org/), [qpdf](https://qpdf.sourceforge.io/), [TeX Live](https://www.tug.org/texlive/), [LibreOffice](https://www.libreoffice.org/) and [Inkscape](https://inkscape.org/). The web application uses [Vue.js](https://vuejs.org/), [Bootstrap](https://getbootstrap.com/) and [socket.io](https://socket.io/).
+
+The sheetbook generator can create the following sheetbook formats:
+* Single-tune A4 sheets. For this, the ODS tunesheet is converted to PDF and then scaled up to A4, preserving its orientation (landscape or portrait).
+* A4, A5 or A6 booklets. For this, the ODS tunesheets are converted to PDF, rotated to portrait and scaled to the desired format. For A5 and A6, multiple pages are arranged on each A4 page (2 portrait A5 pages per landscape A4 page, or 4 portrait A6 pages per portrait A4 page), arranged in an order that will allow binding it into a booklet when printed. A cover page is automatically generated, containing the current month and year and the version number (Git commit ID). Blank pages are automatically inserted to make sure that the total number of pages is dividable by 2 (for A4 booklets) or by 4 (for A5/A6 booklets). Tunes are alphabetically ordered, but double-page tunes are moved out of order to make sure that they appear together as one double page in the printed booklet (so they start on an even page number).

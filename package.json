@@ -2,9 +2,9 @@
   "name": "ror-sheetbook",
   "private": true,
   "workspaces": [
-    "backend",
     "frontend",
-    "generator"
+    "generator",
+    "server"
   ],
   "devDependencies": {
     "@types/tmp": "^0.2.2",
@@ -13,5 +13,6 @@
     "eslint": "^7.27.0",
     "eslint-plugin-import": "^2.23.3"
   },
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "type": "module"
 }

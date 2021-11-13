@@ -1,0 +1,19 @@
+FROM node:17-alpine
+
+RUN apk add --no-cache qpdf texlive libreoffice-calc libreoffice-writer ttf-liberation inkscape bash ncurses msttcorefonts-installer git poppler-utils \
+    && update-ms-fonts
+
+ENV TERM=xterm
+
+COPY BTNGrilledCheese.zip /opt/ror-sheetbook-generator/
+RUN unzip /opt/ror-sheetbook-generator/BTNGrilledCheese.zip -d /usr/share/fonts/truetype \
+    && fc-cache -f
+
+COPY . /opt/ror-sheetbook-generator/
+WORKDIR /opt/ror-sheetbook-generator/generator
+
+RUN yarn install && yarn build
+
+VOLUME /sheetbook
+
+ENTRYPOINT [ "node", "dist/generator/src/cli.js", "-i", "/sheetbook", "-o", "/sheetbook/generated" ];

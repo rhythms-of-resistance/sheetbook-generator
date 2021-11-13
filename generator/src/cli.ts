@@ -1,6 +1,8 @@
+#!/usr/bin/env node
+
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { generateSheets, SheetbookSpec, SheetFormat, SheetType, TuneSet } from './generate';
+import { generateSheets, SheetbookSpec, SheetFormat, SheetType, TuneSet } from './generate.js';
 import mkdirp from 'mkdirp';
 import tmp from 'tmp';
 
@@ -37,23 +39,9 @@ const args = yargs(hideBin(process.argv))
         '<tunes> can be a list of tunes (comma-separated), "all" (for all tunes) or "no-ca" (for all except controversial cultural appropriation tunes).\n' +
         '\n' +
         'To generate all tunesheets in all sizes:\n' +
-        '$0 -i . -o generated single:all booklet:{a4,a5,a6}:{all,no-ca}'
+        '$0 -i /sheetbook -o /sheetbook/generated single:all booklet:{a4,a5,a6}:{all,no-ca}'
     )
     .parse();
-
-(async () => {
-    if (args.keep) {
-        process.env.KEEP_TEMP = '1';
-    } else {
-        tmp.setGracefulCleanup();
-    }
-
-    const specs = argsToSpecs(args._, args.outdir);
-
-    await mkdirp(specs.some((spec) => spec.type === SheetType.MULTIPLE) ? `${args.outdir}/single` : args.outdir);
-
-    await generateSheets(args.sheetbook, specs);
-})();
 
 function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpec[] {
     let customCounter = 0;
@@ -81,3 +69,15 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
         }
     })
 }
+
+if (args.keep) {
+    process.env.KEEP_TEMP = '1';
+} else {
+    tmp.setGracefulCleanup();
+}
+
+const specs = argsToSpecs(args._, args.outdir);
+
+await mkdirp(specs.some((spec) => spec.type === SheetType.MULTIPLE) ? `${args.outdir}/single` : args.outdir);
+
+await generateSheets(args.sheetbook, specs);
