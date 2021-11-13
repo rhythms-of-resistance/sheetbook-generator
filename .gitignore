@@ -6,3 +6,4 @@ node_modules
 *.code-workspace
 yarn-error.log
 */yarn-error.log
+data

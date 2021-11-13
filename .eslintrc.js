@@ -1,7 +1,7 @@
 module.exports = {
 	root: true,
 	parser: '@typescript-eslint/parser',
-	plugins: ['react', 'react-hooks', '@typescript-eslint', 'import'],
+	plugins: ['@typescript-eslint', 'import'],
 	extends: ['plugin:import/typescript'],
 	env: {
 		node: true
@@ -57,6 +57,7 @@ module.exports = {
 		"no-obj-calls": ["error"],
 		"no-octal": ["error"],
 		"no-prototype-builtins": ["error"],
+		"no-redeclare": ["error"],
 		"no-regex-spaces": ["error"],
 		"no-self-assign": ["error"],
 		"no-setter-return": ["error"],
@@ -73,11 +74,6 @@ module.exports = {
 		"no-with": ["error"],
 		"require-yield": ["error"],
 		"use-isnan": ["error"],
-		"valid-typeof": ["error"],
-
-		'react-hooks/rules-of-hooks': 'error',
-        'react-hooks/exhaustive-deps': ['warn', {
-            "additionalHooks": "(useCatchingCallback)"
-        }],
+		"valid-typeof": ["error"]
 	}
 };

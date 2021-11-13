@@ -1,42 +1,11 @@
 import { dir, DirectoryResult, file, FileResult } from "tmp-promise";
 import { globby } from "zx";
-import { concatPdfs, convertOdToPdf, convertSvgToPdf, getNumberOfPages, pdfToPortrait, scalePdfToA4, scalePdfToA5Booklet, scalePdfToA6Booklet } from "./convert.js";
+import { concatPdfs, convertOdToPdf, convertSvgToPdf, getNumberOfPages, pdfToPortrait, scalePdfToA4, scalePdfToA5Booklet, scalePdfToA6Booklet } from "./convert";
 import { promises as fs } from "fs";
 import dayjs from "dayjs";
-import { getCommitId } from "./git.js";
-import { CA_TUNES, TEMP_OPTIONS } from "../../config.js";
-
-export enum SheetType {
-    /** Generate a single-tune PDF sheet for one tune at the specified file path. */
-    SINGLE = 'single',
-    /** Generate multiple single-tune PDF, for a predefined tune set or a custom list of tunes, in the specified directory. */
-    MULTIPLE = 'multiple',
-    /** Generate an A4, A5 or A6 booklet for a predefined tune set or a custom list of tunes, at the specified file path. */
-    BOOKLET = 'booklet'
-}
-
-export enum SheetFormat {
-    A4 = 'a4',
-    A5 = 'a5',
-    A6 = 'a6'
-}
-
-export enum TuneSet {
-    /** All tunes that can be found in the repository (including breaks, network description and dances) */
-    ALL = 'all',
-
-    /**
-     * All tunes that can be found in the repository (including breaks, network description and dances),
-     * except controversial cultural appropriation tunes.
-     */
-    NO_CA = 'no-ca'
-}
-
-export type SheetbookSpec = (
-    { type: SheetType.SINGLE; tune: string; outFile: string } |
-    { type: SheetType.MULTIPLE; tunes: TuneSet | Set<string>; outDir: string } |
-    { type: SheetType.BOOKLET; tunes: TuneSet | Set<string>; format: SheetFormat; outFile: string }
-);
+import { getCommitId } from "./git";
+import { CA_TUNES, TEMP_OPTIONS } from "../../config";
+import { SheetbookSpec, SheetFormat, SheetType, TuneSet } from "ror-sheetbook-common";
 
 /**
  * Generate the sheets with the given specifications. Since this method creates temporary files that it cleans up again afterwards,
@@ -193,7 +162,7 @@ async function getPageNumbers(tunePdfs: DirectoryResult, tunes: Set<string>): Pr
  * Returns a list of all tunes available.
  * @param inDir The directory to the local working copy of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
  */
-async function getExistingTunes(inDir: string): Promise<string[]> {
+export async function getExistingTunes(inDir: string): Promise<string[]> {
     const odsFiles = await globby(`${inDir}/*.ods`);
     return ['network', ...odsFiles.map((f) => f.match(/([^/]+)\.ods$/)![1]).filter((f) => f !== 'breaks_large')];
 }
@@ -203,7 +172,7 @@ async function getExistingTunes(inDir: string): Promise<string[]> {
  * @param tunes The tune set
  * @param existingTunes The list of existing tunes as returned by getExistingTunes
  */
-function resolveTuneSet(tunes: TuneSet | Set<string>, existingTunes: string[]): Set<string> {
+export function resolveTuneSet(tunes: TuneSet | Set<string>, existingTunes: string[]): Set<string> {
     if (typeof tunes !== 'string') {
         return tunes;
     }
@@ -240,7 +209,7 @@ function getTotalPageNumber(tunes: string[], pageNumbers: Map<string, number>): 
 }
 
 /**
- * Orders the given list of tunes to be concatenated. breaks and network come first, dances come last. Everything else is ordered
+ * Orders the given list of tunes to be concatenated. network and breaks come first, dances come last. Everything else is ordered
  * alphabetically. Blank pages are inserted to make sure that the total number of pages is dividable by 2 (for A4) or by 4 (for A5/A6).
  * Double-page tunes are moved out of order if they are not aligned with a double page (not starting at an even page number).
  * @param tunes The set of tunes to include. May include breaks, network and dances, but not front and back.
@@ -253,11 +222,11 @@ function orderTunes(tunes: Set<string>, pageNumbers: Map<string, number>, format
     const result: string[] = [];
     const totalPages = () => getTotalPageNumber(result, pageNumbers);
 
-    if (tunes.has('breaks')) {
-        result.push('breaks');
-    }
     if (tunes.has('network')) {
         result.push('network');
+    }
+    if (tunes.has('breaks')) {
+        result.push('breaks');
     }
 
     result.push(...alignTunes([...tunes].filter((t) => !['breaks', 'network', 'dances'].includes(t)).sort(), pageNumbers, totalPages()));

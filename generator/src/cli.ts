@@ -2,9 +2,10 @@
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { generateSheets, SheetbookSpec, SheetFormat, SheetType, TuneSet } from './generate.js';
+import { generateSheets } from './generate';
 import mkdirp from 'mkdirp';
 import tmp from 'tmp';
+import { SheetbookSpec, SheetFormat, SheetType, TuneSet } from 'ror-sheetbook-common';
 
 const args = yargs(hideBin(process.argv))
     .strict(true)
@@ -70,14 +71,16 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
     })
 }
 
-if (args.keep) {
-    process.env.KEEP_TEMP = '1';
-} else {
-    tmp.setGracefulCleanup();
-}
+(async () => {
+    if (args.keep) {
+        process.env.KEEP_TEMP = '1';
+    } else {
+        tmp.setGracefulCleanup();
+    }
 
-const specs = argsToSpecs(args._, args.outdir);
+    const specs = argsToSpecs(args._, args.outdir);
 
-await mkdirp(specs.some((spec) => spec.type === SheetType.MULTIPLE) ? `${args.outdir}/single` : args.outdir);
+    await mkdirp(specs.some((spec) => spec.type === SheetType.MULTIPLE) ? `${args.outdir}/single` : args.outdir);
 
-await generateSheets(args.sheetbook, specs);
+    await generateSheets(args.sheetbook, specs);
+})();

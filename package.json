@@ -2,10 +2,15 @@
   "name": "ror-sheetbook",
   "private": true,
   "workspaces": [
+    "common",
     "frontend",
     "generator",
     "server"
   ],
+  "scripts": {
+    "lint": "eslint",
+    "check-types": "yarn workspaces run check-types"
+  },
   "devDependencies": {
     "@types/tmp": "^0.2.2",
     "@typescript-eslint/eslint-plugin": "^4.24.0",
@@ -13,6 +18,5 @@
     "eslint": "^7.27.0",
     "eslint-plugin-import": "^2.23.3"
   },
-  "version": "1.0.0",
-  "type": "module"
+  "version": "1.0.0"
 }

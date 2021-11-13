@@ -1,0 +1,16 @@
+.rsg-settings-form {
+
+	.rsg-checkbox-grid {
+		column-width: 220px;
+	}
+
+	.rsg-log {
+		opacity: 0;
+		transition: opacity 0.3s;
+
+		&.showLog {
+			opacity: 1;
+		}
+	}
+
+}

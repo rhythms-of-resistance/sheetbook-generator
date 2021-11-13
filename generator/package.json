@@ -1,13 +1,13 @@
 {
   "name": "ror-sheetbook-generator",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "test": "jest",
-    "dev-cli": "node --loader ts-node/esm src/cli.ts",
+    "dev-cli": "ts-node src/cli.ts",
     "cli": "node dist/generator/src/cli.js",
     "build": "tsc && chmod +x dist/generator/src/cli.js",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "check-types": "tsc --noEmit"
   },
   "bin": {
     "ror-sheetbook-generator": "./dist/generator/src/cli.js"
@@ -15,6 +15,7 @@
   "dependencies": {
     "dayjs": "^1.10.7",
     "mkdirp": "^1.0.4",
+    "ror-sheetbook-common": "1.0.0",
     "tmp": "^0.2.1",
     "tmp-promise": "^3.0.3",
     "yargs": "^17.2.1",

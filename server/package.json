@@ -2,15 +2,37 @@
   "name": "ror-sheetbook-server",
   "version": "1.0.0",
   "scripts": {
-    "dev-server": "ts-node ./src/server.ts"
+    "prod-server": "NODE_ENV=production dist/server.js",
+    "server": "NODE_ENV=development ts-node src/server.ts",
+    "dev-server": "NODE_ENV=development ts-node src/server.ts --watch",
+    "check-types": "tsc --noEmit",
+    "build": "tsc",
+    "clean": "rimraf dist"
   },
   "dependencies": {
+    "compression": "^1.7.4",
     "express": "^4.17.1",
-    "typescript": "^4.4.4"
+    "express-domain-middleware": "^0.1.0",
+    "lodash": "^4.17.21",
+    "mkdirp": "^1.0.4",
+    "ror-sheetbook-common": "1.0.0",
+    "ror-sheetbook-frontend": "1.0.0",
+    "ror-sheetbook-generator": "1.0.0",
+    "socket.io": "^4.3.2",
+    "uuid": "^8.3.2",
+    "yargs": "^17.2.1"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.2",
     "@types/express": "^4.17.13",
+    "@types/express-domain-middleware": "^0.0.6",
+    "@types/lodash": "^4.14.176",
     "@types/node": "^16.11.7",
-    "ts-node": "^10.4.0"
+    "@types/uuid": "^8.3.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.4.4",
+    "webpack-dev-middleware": "^5.2.1",
+    "webpack-hot-middleware": "^2.25.1"
   }
 }

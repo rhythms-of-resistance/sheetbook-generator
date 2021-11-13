@@ -1,0 +1,14 @@
+{
+  "name": "ror-sheetbook-common",
+  "version": "1.0.0",
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.11.6"
+  },
+  "devDependencies": {
+    "typescript": "^4.4.4"
+  },
+  "main": "src/index.ts"
+}

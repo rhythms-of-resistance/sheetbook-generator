@@ -1,6 +1,6 @@
 import { $, ProcessOutput } from "zx";
 import { file } from "tmp-promise";
-import { TEMP_OPTIONS } from "../../config.js";
+import { TEMP_OPTIONS } from "../../config";
 
 /**
  * Convert one or multiple ODT or ODS files to PDF.
