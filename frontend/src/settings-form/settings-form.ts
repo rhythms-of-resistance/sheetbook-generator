@@ -32,7 +32,7 @@ export default class SettingsForm extends Vue {
 	isSubmitting = false;
 	showLog = false;
 
-	mounted() {
+	mounted(): void {
 		this.terminal = new Terminal();
 		this.fitAddon = new FitAddon();
 		this.terminal.loadAddon(this.fitAddon);
@@ -43,27 +43,27 @@ export default class SettingsForm extends Vue {
 		window.addEventListener("resize", this.handleResize);
 	}
 
-	beforeDestroy() {
+	beforeDestroy(): void {
 		this.socket.socket.off("log", this.handleLog);
 		window.removeEventListener("resize", this.handleResize);
 	}
 
-	handleLog(message: string) {
+	handleLog(message: string): void {
 		this.terminal.write(message.replace(/\n/g, '\r\n'));
 	}
 
-	handleResize() {
+	handleResize(): void {
 		this.fitAddon.fit();
 	}
 
 	@Watch('tuneset', { immediate: true })
-	handleTunesetChange() {
+	handleTunesetChange(): void {
 		if (this.tuneset !== 'custom') {
 			this.tunes = [...this.socket.tunesInfo.tuneSets[this.tuneset]];
 		}
 	}
 
-	async submit() {
+	async submit(): Promise<void> {
 		if (this.isSubmitting) {
 			return;
 		}

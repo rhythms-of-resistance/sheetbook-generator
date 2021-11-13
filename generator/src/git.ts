@@ -32,6 +32,6 @@ export async function gitFetch(dir: string): Promise<void> {
  * @param commitId The commit/branch/tag ID to reset to
  */
 export async function gitResetAndCheckout(dir: string, commitId: string): Promise<void> {
-    //await $`git -C ${dir} reset --hard`;
-    //await $`git -C ${dir} checkout ${commitId}`;
+    await $`git -C ${dir} reset --hard`;
+    await $`git -C ${dir} checkout ${commitId}`;
 }

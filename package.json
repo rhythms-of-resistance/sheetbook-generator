@@ -8,7 +8,7 @@
     "server"
   ],
   "scripts": {
-    "lint": "eslint",
+    "lint": "eslint **/*.ts",
     "check-types": "yarn workspaces run check-types"
   },
   "devDependencies": {
@@ -16,7 +16,8 @@
     "@typescript-eslint/eslint-plugin": "^4.24.0",
     "@typescript-eslint/parser": "^4.24.0",
     "eslint": "^7.27.0",
-    "eslint-plugin-import": "^2.23.3"
+    "eslint-plugin-import": "^2.23.3",
+    "tmp": "^0.2.1"
   },
   "version": "1.0.0"
 }

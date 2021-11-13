@@ -1,4 +1,4 @@
-import { Server, Socket as SocketIO } from "socket.io";
+import { Server } from "socket.io";
 import domain from "domain";
 import { Server as HttpServer } from "http";
 import { ServerApi, ClientApi, sheetbookRequestSpecValidator } from "ror-sheetbook-common";

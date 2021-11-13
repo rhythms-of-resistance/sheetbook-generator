@@ -1,4 +1,4 @@
-import { DATA_DIR, DOWNLOADS_DIR, HOST, PORT } from '../../config';
+import { DOWNLOADS_DIR, HOST, PORT } from '../../config';
 import compression from "compression";
 import express from "express";
 import { dirname } from "path";

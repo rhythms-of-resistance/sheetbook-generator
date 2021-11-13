@@ -31,6 +31,6 @@ process.stderr.write = function(...args): boolean {
     }
 };
 
-export function setCustomLogForCurrentRequest(log: (chunk: string) => void) {
+export function setCustomLogForCurrentRequest(log: (chunk: string) => void): void {
 	(process as any).domain.rsgLog = log;
 }

@@ -1,4 +1,4 @@
-import { $, ProcessOutput } from "zx";
+import { $ } from "zx";
 import { file } from "tmp-promise";
 import { TEMP_OPTIONS } from "../../config";
 

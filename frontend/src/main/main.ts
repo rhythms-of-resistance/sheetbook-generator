@@ -1,9 +1,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import WithRender from "./main.vue";
-import { Prop, Watch } from "vue-property-decorator";
+import { Prop } from "vue-property-decorator";
 import "./main.scss";
-import { TunesInfo } from "ror-sheetbook-common";
 import SettingsForm from "../settings-form/settings-form";
 import { Socket } from "../socket";
 
