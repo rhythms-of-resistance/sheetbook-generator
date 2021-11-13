@@ -1,0 +1,8 @@
+{
+  "name": "ror-sheetbook-frontend",
+  "version": "1.0.0",
+  "dependencies": {
+    "typescript": "^4.4.4"
+  },
+  "devDependencies": {}
+}
