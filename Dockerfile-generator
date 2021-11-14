@@ -16,4 +16,4 @@ RUN yarn install && yarn build
 
 VOLUME /sheetbook
 
-ENTRYPOINT [ "node", "dist/generator/src/cli.js", "-i", "/sheetbook", "-o", "/sheetbook/generated" ];
+ENTRYPOINT [ "node", "dist/cli.js", "-i", "/sheetbook", "-o", "/sheetbook/generated" ];
