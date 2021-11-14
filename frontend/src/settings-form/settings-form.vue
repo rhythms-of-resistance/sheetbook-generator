@@ -36,6 +36,11 @@
 				<div class="form-check">
 					<input class="form-check-input" type="radio" id="rsg-settings-form-custom" v-model="tuneset" value="custom"/>
 					<label class="form-check-label" for="rsg-settings-form-custom">Custom selection</label>
+					<template v-if="tuneset === 'custom'">
+						&nbsp;
+						<a v-if="tunes.length > 0" href="javascript:" @click.prevent="tunes = []">Unselect all</a>
+						<a v-if="tunes.length === 0" href="javascript:" @click.prevent="selectAll">Select all</a>
+					</template>
 				</div>
 
 				<div class="rsg-checkbox-grid mt-4">

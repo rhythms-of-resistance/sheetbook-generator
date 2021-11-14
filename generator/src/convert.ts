@@ -9,6 +9,10 @@ import { TEMP_OPTIONS } from "../../config";
  *               with the extension replaced by .pdf.
  */
 export async function convertOdToPdf(inFile: string[] | string, outDir: string): Promise<void> {
+    if (Array.isArray(inFile) && inFile.length === 0) {
+        return;
+    }
+
     await $`libreoffice --convert-to pdf ${inFile} --outdir ${outDir}`;
 }
 

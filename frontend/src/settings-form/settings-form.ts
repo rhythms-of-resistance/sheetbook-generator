@@ -63,6 +63,10 @@ export default class SettingsForm extends Vue {
 		}
 	}
 
+	selectAll(): void {
+		this.tunes = this.socket.tunesInfo.existingTunes.map((t) => t.name);
+	}
+
 	async submit(): Promise<void> {
 		if (this.isSubmitting) {
 			return;
