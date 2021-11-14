@@ -47,7 +47,7 @@ export type SingleSheetbookSpec = z.infer<typeof singleSheetbookSpecValidator>;
 
 export const multipleSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.MULTIPLE),
-    tunes: tuneSetValidator.or(z.set(z.string())),
+    tunes: tuneSetValidator.or(z.array(z.string())),
     outDir: z.string()
 });
 
@@ -55,7 +55,7 @@ export type multipleSheetbookSpec = z.infer<typeof multipleSheetbookSpecValidato
 
 export const bookletSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.BOOKLET),
-    tunes: tuneSetValidator.or(z.set(z.string())),
+    tunes: tuneSetValidator.or(z.array(z.string())),
     format: sheetFormatValidator,
     outFile: z.string()
 });

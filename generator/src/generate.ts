@@ -123,7 +123,7 @@ async function generateRotatedTunePdfs(tunePdfs: DirectoryResult, tunes: Set<str
  * @param commitId The git commit id, as resolved by getCommitId()
  * @return The temporary file containing the cover PDF. Call the cleanup method when you are done.
  */
-async function generateFrontOrBackPdf(inDir: string, which: 'front' | 'back', tunes: TuneSet | Set<string>, commitId: string): Promise<FileResult> {
+async function generateFrontOrBackPdf(inDir: string, which: 'front' | 'back', tunes: TuneSet | string[], commitId: string): Promise<FileResult> {
     const [frontSvgTemplate, tmpSvg, result] = await Promise.all([
         fs.readFile(`${inDir}/${which}.svg`).then((b) => b.toString('utf8')),
         file({ ...TEMP_OPTIONS, postfix: `${which}.svg` }),
@@ -172,9 +172,9 @@ export async function getExistingTunes(inDir: string): Promise<string[]> {
  * @param tunes The tune set
  * @param existingTunes The list of existing tunes as returned by getExistingTunes
  */
-export function resolveTuneSet(tunes: TuneSet | Set<string>, existingTunes: string[]): Set<string> {
+export function resolveTuneSet(tunes: TuneSet | string[], existingTunes: string[]): Set<string> {
     if (typeof tunes !== 'string') {
-        return tunes;
+        return new Set(tunes);
     }
 
     switch (tunes) {

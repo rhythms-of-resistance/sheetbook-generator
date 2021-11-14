@@ -52,7 +52,7 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
         if (split[0] === 'single') {
             return {
                 type: SheetType.MULTIPLE,
-                tunes: Object.values(TuneSet).includes(split[1] as TuneSet) ? split[1] as TuneSet : new Set(split[1].split(',')),
+                tunes: Object.values(TuneSet).includes(split[1] as TuneSet) ? split[1] as TuneSet : split[1].split(','),
                 outDir: `${outDir}/single`
             };
         } else if (split[0] === 'booklet') {
@@ -61,7 +61,7 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
             }
             return {
                 type: SheetType.BOOKLET,
-                tunes: Object.values(TuneSet).includes(split[2] as TuneSet) ? split[2] as TuneSet : new Set(split[2].split(',')),
+                tunes: Object.values(TuneSet).includes(split[2] as TuneSet) ? split[2] as TuneSet : split[2].split(','),
                 format: split[1] as SheetFormat,
                 outFile: `${outDir}/tunesheet-${split[1]}-${Object.values(TuneSet).includes(split[2] as TuneSet) ? split[2] : `custom${customCounter++ > 0 ? customCounter : ''}`}.pdf`
             };

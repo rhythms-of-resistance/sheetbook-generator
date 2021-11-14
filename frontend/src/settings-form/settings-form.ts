@@ -79,7 +79,7 @@ export default class SettingsForm extends Vue {
 			} : {
 				type: SheetType.BOOKLET,
 				format: this.format === 'booklet-a6' ? SheetFormat.A6 : this.format === 'booklet-a5' ? SheetFormat.A5 : SheetFormat.A4,
-				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : new Set(this.tunes)
+				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : this.tunes
 			};
 
 			const downloadPath = await this.socket.createSheet(spec);
