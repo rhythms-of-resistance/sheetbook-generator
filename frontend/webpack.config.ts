@@ -3,7 +3,7 @@ import copyPlugin from "copy-webpack-plugin";
 import htmlPlugin from "html-webpack-plugin";
 import { compile, CompilerOptions } from "vue-template-compiler";
 import svgToMiniDataURI from "mini-svg-data-uri";
-import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
+// import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
 function includeHotMiddleware(entry: string | string[], isDev: boolean): string | string[] {
 	if(!isDev)
@@ -107,7 +107,7 @@ export default (env: any, argv: any): Configuration => {
 			...(isDev ? [
 				new webpack.HotModuleReplacementPlugin()
 			] : [
-				new BundleAnalyzerPlugin(),
+				// new BundleAnalyzerPlugin(),
 			])
 		]
 	};

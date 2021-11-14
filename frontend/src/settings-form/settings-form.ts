@@ -90,7 +90,7 @@ export default class SettingsForm extends Vue {
 		} catch (err: any) {
 			this.terminal.writeln('');
 			this.terminal.writeln(`\x1B[1;31mSheet generation failed.`);
-			this.terminal.writeln(err.message);
+			this.terminal.writeln(err.message.replace(/\n/g, '\r\n'));
 		} finally {
 			this.isSubmitting = false;
 		}

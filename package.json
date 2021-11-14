@@ -8,8 +8,12 @@
     "server"
   ],
   "scripts": {
-    "lint": "eslint **/*.ts",
-    "check-types": "yarn workspaces run check-types"
+    "prod-server": "cd server && yarn run prod-server",
+    "server": "cd server && yarn run server",
+    "dev-server": "cd server && yarn run dev-server",
+    "lint": "eslint */src/**/*.ts",
+    "check-types": "yarn workspaces run check-types",
+    "clean": "yarn workspaces run clean"
   },
   "devDependencies": {
     "@types/tmp": "^0.2.2",

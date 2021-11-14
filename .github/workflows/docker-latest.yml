@@ -23,10 +23,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push
-        id: docker_build
+        name: Build and push (generator)
+        id: docker_build_generator
         uses: docker/build-push-action@v2
         with:
           push: true
           tags: rhythmsofresistance/sheetbook-generator:latest
           file: Dockerfile-generator
+      -
+        name: Build and push (server)
+        id: docker_build_server
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: rhythmsofresistance/sheetbook-server:latest
+          file: Dockerfile-server

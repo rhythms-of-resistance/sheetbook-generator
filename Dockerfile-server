@@ -1,0 +1,28 @@
+FROM node:17-alpine
+
+RUN apk add --no-cache qpdf texlive libreoffice-calc libreoffice-writer ttf-liberation inkscape bash ncurses msttcorefonts-installer git poppler-utils \
+    && update-ms-fonts
+
+ENV TERM=xterm
+
+COPY BTNGrilledCheese.zip /opt/ror-sheetbook-generator/
+RUN unzip /opt/ror-sheetbook-generator/BTNGrilledCheese.zip -d /usr/share/fonts/truetype \
+    && fc-cache -f
+
+CMD yarn run prod-server
+EXPOSE 8955
+
+RUN apk add --no-cache yarn
+
+RUN adduser -D -h /opt/ror -s /bin/sh ror && mkdir /opt/ror/data && chown ror:ror /opt/ror/data
+ENV DATA_DIR /opt/ror/data
+
+COPY . /opt/ror/sheetbook-generator
+
+WORKDIR /opt/ror/sheetbook-generator/server
+
+RUN cd .. && yarn install && cd frontend && yarn build && cd ../server && yarn build
+
+USER ror
+
+RUN git config --global advice.detachedHead false
