@@ -2,15 +2,15 @@
   "name": "ror-sheetbook-server",
   "version": "1.0.0",
   "scripts": {
-    "prod-server": "NODE_ENV=production dist/server.js",
-    "server": "NODE_ENV=development ts-node src/server.ts",
-    "dev-server": "NODE_ENV=development ts-node src/server.ts --watch",
+    "prod-server": "NODE_ENV=production dist/server/server.js",
+    "server": "NODE_ENV=development ts-node src/server/server.ts",
+    "dev-server": "NODE_ENV=development ts-node src/server/server.ts --watch",
     "check-types": "tsc --noEmit",
     "build": "webpack",
     "clean": "rimraf dist"
   },
   "bin": {
-    "ror-sheetbook-server": "dist/server.js"
+    "ror-sheetbook-server": "dist/server/server.js"
   },
   "dependencies": {
     "compression": "^1.7.4",

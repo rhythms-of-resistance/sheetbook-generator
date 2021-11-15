@@ -28,7 +28,7 @@ export class Socket {
         });
 
         this.tunesInfo = await new Promise<TunesInfo>((resolve, reject) => {
-            this.socket.emit("getTunesInfo", (err, tunesInfo) => {
+            this.socket.emit("getTunesInfo", "develop", (err, tunesInfo) => {
                 if (err) {
                     reject(new Error(err));
                 } else {

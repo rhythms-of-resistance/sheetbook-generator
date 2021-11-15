@@ -4,7 +4,6 @@ import { Server as HttpServer } from "http";
 import { ServerApi, ClientApi, sheetbookRequestSpecValidator } from "ror-sheetbook-common";
 import { getTunesInfo } from "./repository";
 import { createSheet } from "./downloads";
-import { setCustomLogForCurrentRequest } from "./log";
 
 export function createSocket(server: HttpServer): void {
     const io = new Server<ServerApi, ClientApi>(server, {
@@ -16,17 +15,13 @@ export function createSocket(server: HttpServer): void {
         d.add(socket);
         d.enter();
 
-        setCustomLogForCurrentRequest((chunk) => {
-            socket.emit("log", chunk);
-        });
-
         d.on("error", function(err) {
             console.error("Uncaught error in socket:", err.stack);
             socket.disconnect();
         });
 
-        socket.on("getTunesInfo", (callback) => {
-            getTunesInfo().then((tunesInfo) => {
+        socket.on("getTunesInfo", (treeish, callback) => {
+            getTunesInfo(treeish).then((tunesInfo) => {
                 callback(undefined, tunesInfo);
             }).catch((err) => {
                 console.error(err);
@@ -37,7 +32,9 @@ export function createSocket(server: HttpServer): void {
         socket.on("createSheet", (spec, callback) => {
             Promise.resolve()
                 .then(() => sheetbookRequestSpecValidator.parse(spec))
-                .then((parsedSpec) => createSheet(parsedSpec))
+                .then((parsedSpec) => createSheet(parsedSpec, (chunk) => {
+                    socket.emit("log", chunk.toString('utf8'));
+                }))
                 .then((downloadPath) => {
                     callback(undefined, downloadPath);
                 }).catch((err) => {

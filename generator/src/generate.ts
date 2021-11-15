@@ -159,12 +159,22 @@ async function getPageNumbers(tunePdfs: DirectoryResult, tunes: Set<string>): Pr
 }
 
 /**
- * Returns a list of all tunes available.
+ * Returns a list of all tunes available, based on the list of files in a local working copy of the sheetbook repository.
  * @param inDir The directory to the local working copy of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
  */
 export async function getExistingTunes(inDir: string): Promise<string[]> {
-    const odsFiles = await globby(`${inDir}/*.ods`);
-    return ['network', ...odsFiles.map((f) => f.match(/([^/]+)\.ods$/)![1]).filter((f) => f !== 'breaks_large')];
+    return extractExistingTunes(await globby(`${inDir}/*.ods`));
+}
+
+/**
+ * Returns a list of all tunes available, based on a list of files provided as an argument.
+ * @params files A list of filenames of the root directory of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
+ */
+export function extractExistingTunes(files: string[]): string[] {
+    return [
+        'network',
+        ...files.map((f) => f.match(/([^/]+)\.ods$/)?.[1]).filter((f) => f && f !== 'breaks_large') as string[]
+    ];
 }
 
 /**

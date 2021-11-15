@@ -2,16 +2,12 @@ import webpack, { Configuration } from 'webpack';
 import nodeExternals from 'webpack-node-externals';
 import { promises as fs } from 'fs';
 
-export default (env: any, argv: any): Configuration => {
+export default (env: any, argv: any): Configuration[] => {
     const isDev = argv.mode == 'development';
 
-    return {
+    const base: Configuration = {
         mode: isDev ? 'development' : 'production',
         context: __dirname,
-        entry: './src/server',
-        output: {
-            filename: 'server.js'
-        },
         resolve: {
             modules: ['node_modules'],
             extensions: ['.tsx', '.jsx', '.ts', '.js']
@@ -30,12 +26,7 @@ export default (env: any, argv: any): Configuration => {
                 banner: '#!/usr/bin/env node',
                 raw: true,
                 entryOnly: true
-            }),
-            function() {
-                this.hooks.done.tapPromise('Make executable', async () => {
-                    await fs.chmod(`${__dirname}/dist/server.js`, '755');
-                });
-            }
+            })
         ],
         devtool: false,
         cache: true,
@@ -57,4 +48,39 @@ export default (env: any, argv: any): Configuration => {
             __dirname: false
         }
     };
+
+    return [
+        {
+            ...base,
+            name: 'server',
+            entry: './src/server/server',
+            output: {
+                filename: 'server/server.js'
+            },
+            plugins: [
+                ...base.plugins as any,
+                function() {
+                    this.hooks.done.tapPromise('Make executable', async () => {
+                        await fs.chmod(`${__dirname}/dist/server/server.js`, '755');
+                    });
+                }
+            ]
+        },
+        {
+            ...base,
+            name: 'generator',
+            entry: './src/generator/generator',
+            output: {
+                filename: 'generator/generator.js'
+            },
+            plugins: [
+                ...base.plugins as any,
+                function() {
+                    this.hooks.done.tapPromise('Make executable', async () => {
+                        await fs.chmod(`${__dirname}/dist/generator/generator.js`, '755');
+                    });
+                }
+            ]
+        }
+    ]
 };

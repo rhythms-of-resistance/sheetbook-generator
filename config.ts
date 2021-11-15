@@ -14,8 +14,11 @@ export const SHEETBOOK_REPO = 'https://github.com/rhythms-of-resistance/sheetboo
 export const MAIN_BRANCH = 'origin/develop';
 
 export const DATA_DIR = process.env.DATA_DIR || `${__dirname}/data`;
+export const TEMP_DIR = `${DATA_DIR}/temp`;
 export const DOWNLOADS_DIR = `${DATA_DIR}/downloads`;
-export const SHEETBOOK_DIR = `${DATA_DIR}/sheetbook`;
+export const SHEETBOOK_DIR = `${DATA_DIR}/sheetbook.git`;
 
 /** How long to keep generated downloads, in seconds. */
 export const DOWNLOAD_PRESERVE_TIME = 3600;
+
+export const GENERATE_SHEET_TIMEOUT = 600;

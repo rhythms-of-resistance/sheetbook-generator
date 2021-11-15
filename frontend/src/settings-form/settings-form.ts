@@ -79,11 +79,13 @@ export default class SettingsForm extends Vue {
 		try {
 			const spec: SheetbookRequestSpec = this.format === 'single' ? {
 				type: SheetType.SINGLE,
-				tune: this.tune
+				tune: this.tune,
+				treeish: 'develop'
 			} : {
 				type: SheetType.BOOKLET,
 				format: this.format === 'booklet-a6' ? SheetFormat.A6 : this.format === 'booklet-a5' ? SheetFormat.A5 : SheetFormat.A4,
-				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : this.tunes
+				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : this.tunes,
+				treeish: 'develop'
 			};
 
 			const downloadPath = await this.socket.createSheet(spec);

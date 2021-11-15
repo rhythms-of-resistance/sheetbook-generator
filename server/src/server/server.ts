@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { DOWNLOADS_DIR, HOST, PORT } from '../../config';
+import { DOWNLOADS_DIR, HOST, PORT } from '../../../config';
 import compression from "compression";
 import express from "express";
 import { dirname } from "path";
@@ -8,7 +8,7 @@ import domainMiddleware from "express-domain-middleware";
 import yargs from "yargs";
 import { createServer } from 'http';
 import { createSocket } from './socket';
-import { pull } from './repository';
+import { cloneRepository, pull } from './repository';
 import mkdirp from 'mkdirp';
 
 const argv = yargs(process.argv.slice(2)).options({
@@ -57,10 +57,7 @@ const server = createServer(app);
 createSocket(server);
 
 (async () => {
-    await Promise.all([
-        pull(),
-        mkdirp(DOWNLOADS_DIR)
-    ]);
+    await cloneRepository();
 
     server.listen({ port: PORT, host: HOST }, () => {
         console.log(`Listening on http://${HOST ?? "*"}:${PORT}/`);

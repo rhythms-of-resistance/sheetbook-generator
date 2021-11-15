@@ -19,7 +19,7 @@ In addition, the following fonts need to be installed:
 * Liberation Sans (often provided by a package such as `ttf-liberation` or `fonts-liberation`) is a free replacement for Arial and is needed to render various non-European characters in the sheetbooks.
 * [BTN Grilled Cheese](../BTNGrilledCheese.zip) is used in the cover page.
 
-To generate the PDFs, the sheetbook generator needs write access in the data directory (defaults to `data` in the root of this project, but can be changed using the `DATA_DIR` environment variable) and in the system's temp directory (usually `/tmp`).
+To generate the PDFs, the sheetbook generator needs write access in the data directory (defaults to `data` in the root of this project, but can be changed using the `DATA_DIR` environment variable).
 
 ## Docker
 
