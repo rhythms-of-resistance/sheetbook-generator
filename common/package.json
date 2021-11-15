@@ -2,7 +2,9 @@
   "name": "ror-sheetbook-common",
   "version": "1.0.0",
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "build": "true",
+    "clean": "true"
   },
   "dependencies": {
     "zod": "^3.11.6"

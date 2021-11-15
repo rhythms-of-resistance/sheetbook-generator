@@ -13,6 +13,7 @@
     "dev-server": "cd server && yarn run dev-server",
     "lint": "eslint */src/**/*.ts",
     "check-types": "yarn workspaces run check-types",
+    "build": "yarn workspaces run build",
     "clean": "yarn workspaces run clean"
   },
   "devDependencies": {

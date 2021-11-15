@@ -29,7 +29,9 @@ jobs:
         with:
           push: true
           tags: rhythmsofresistance/sheetbook-generator:latest
-          file: Dockerfile-generator
+          target: generator
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       -
         name: Build and push (server)
         id: docker_build_server
@@ -37,4 +39,6 @@ jobs:
         with:
           push: true
           tags: rhythmsofresistance/sheetbook-server:latest
-          file: Dockerfile-server
+          target: server
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
