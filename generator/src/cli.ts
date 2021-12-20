@@ -5,7 +5,8 @@ import { hideBin } from 'yargs/helpers';
 import { generateSheets } from './generate';
 import mkdirp from 'mkdirp';
 import tmp from 'tmp';
-import { SheetbookSpec, SheetFormat, SheetType, TuneSet } from 'ror-sheetbook-common';
+import { SheetbookSpec, SheetFormat, SheetType } from 'ror-sheetbook-common';
+import { OUTPUT_FILENAME, TUNE_SETS } from '../../config';
 
 const args = yargs(hideBin(process.argv))
     .strict(true)
@@ -37,10 +38,10 @@ const args = yargs(hideBin(process.argv))
         '\n' +
         '<format> can be A4 (booklet of portrait A4 pages), A5 (booklet with two A5 portrait pages per landscape A4 page) or A6 (double booklet with four portrait A6 pages per portrait A4 page).\n' +
         '\n' +
-        '<tunes> can be a list of tunes (comma-separated), "all" (for all tunes), "no-ca" (for all except controversial cultural appropriation tunes) or "ca-booklet" (cultural appropriation booklet).\n' +
+        `<tunes> can be ${Object.entries(TUNE_SETS).map(([k, v]) => `"${k}" (${v.label})`).join(', ')} or a list of tunes (comma-separated).\n` +
         '\n' +
         'To generate all tunesheets in all sizes:\n' +
-        '$0 -i /sheetbook -o /sheetbook/generated single:all booklet:{a4,a5,a6}:{all,no-ca,ca-booklet}'
+        `$0 -i /sheetbook -o /sheetbook/generated single:all booklet:{${Object.values(SheetFormat).join(',')}}:{${Object.keys(TUNE_SETS).join(',')}}`
     )
     .parse();
 
@@ -52,23 +53,23 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
         if (split[0] === 'single') {
             return {
                 type: SheetType.MULTIPLE,
-                tunes: Object.values(TuneSet).includes(split[1] as TuneSet) ? split[1] as TuneSet : split[1].split(','),
+                tunes: Object.keys(TUNE_SETS).includes(split[1]) ? split[1] : split[1].split(','),
                 outDir: `${outDir}/single`
             };
         } else if (split[0] === 'booklet') {
             if (!Object.values(SheetFormat).includes(split[1] as SheetFormat)) {
                 throw new Error(`Unknown format: ${split[1]}`);
             }
-            const filename = (
-                split[2] === TuneSet.CA_BOOKLET ? `${split[2]}-${split[1]}` :
-                Object.values(TuneSet).includes(split[2] as TuneSet) ? `tunesheet-${split[1]}-${split[2]}` :
-                `tunesheet-${split[1]}-custom${customCounter++ > 0 ? customCounter : ''}`
-            );
+
+            const spec = {
+                type: SheetType.BOOKLET as const,
+                tunes: Object.prototype.hasOwnProperty.call(TUNE_SETS, split[2]) ? split[2] : split[2].split(','),
+                format: split[1] as SheetFormat
+            };
+
             return {
-                type: SheetType.BOOKLET,
-                tunes: Object.values(TuneSet).includes(split[2] as TuneSet) ? split[2] as TuneSet : split[2].split(','),
-                format: split[1] as SheetFormat,
-                outFile: `${outDir}/${filename}.pdf`
+                ...spec,
+                outFile: `${outDir}/${OUTPUT_FILENAME(spec)}${Array.isArray(spec.tunes) && customCounter++ > 0 ? customCounter : ''}.pdf`
             };
         } else {
             throw new Error(`Unknown sheet type: ${split[0]}`);

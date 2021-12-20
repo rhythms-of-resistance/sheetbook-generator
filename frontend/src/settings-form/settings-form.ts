@@ -3,13 +3,14 @@ import Component from "vue-class-component";
 import WithRender from "./settings-form.vue";
 import { Prop, Ref, Watch } from "vue-property-decorator";
 import "./settings-form.scss";
-import { SheetbookRequestSpec, SheetFormat, SheetType, TuneSet } from "ror-sheetbook-common";
+import { SheetbookRequestSpec, SheetFormat, SheetType } from "ror-sheetbook-common";
 import { Socket } from "../socket";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import 'xterm/css/xterm.css';
 import { saveAs } from 'file-saver';
+import { MAIN_BRANCH, TUNE_SETS } from '../../../config';
 
 @WithRender
 @Component({
@@ -28,6 +29,7 @@ export default class SettingsForm extends Vue {
 	tuneset: 'no-ca' | 'all' | 'ca-booklet' | 'custom' = 'no-ca';
 	tunes: string[] = [];
 	tune: string = 'breaks';
+	TUNE_SETS = TUNE_SETS;
 
 	isSubmitting = false;
 	showLog = false;
@@ -80,12 +82,12 @@ export default class SettingsForm extends Vue {
 			const spec: SheetbookRequestSpec = this.format === 'single' ? {
 				type: SheetType.SINGLE,
 				tune: this.tune,
-				treeish: 'develop'
+				treeish: MAIN_BRANCH
 			} : {
 				type: SheetType.BOOKLET,
 				format: this.format === 'booklet-a6' ? SheetFormat.A6 : this.format === 'booklet-a5' ? SheetFormat.A5 : SheetFormat.A4,
-				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : this.tuneset === 'ca-booklet' ? TuneSet.CA_BOOKLET : this.tunes,
-				treeish: 'develop'
+				tunes: this.tuneset === 'custom' ? this.tunes : this.tuneset,
+				treeish: MAIN_BRANCH
 			};
 
 			const downloadPath = await this.socket.createSheet(spec);

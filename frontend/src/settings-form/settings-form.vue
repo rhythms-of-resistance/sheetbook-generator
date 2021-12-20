@@ -25,18 +25,11 @@
 		<fieldset class="row mb-3">
 			<legend class="col-form-label col-sm-2 pt-0">Tune selection</legend>
 			<div class="col-sm-10">
-				<div class="form-check">
-					<input class="form-check-input" type="radio" id="rsg-settings-form-no-ca" v-model="tuneset" value="no-ca"/>
-					<label class="form-check-label" for="rsg-settings-form-no-ca">All tunes (without controversial cultural appropriation tunes)</label>
+				<div v-for="(set, key) in TUNE_SETS" class="form-check">
+					<input class="form-check-input" type="radio" :id="`rsg-settings-form-${key}`" v-model="tuneset" :value="key"/>
+					<label class="form-check-label" :for="`rsg-settings-form-${key}`">{{set.label}}</label>
 				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="radio" id="rsg-settings-form-all" v-model="tuneset" value="all"/>
-					<label class="form-check-label" for="rsg-settings-form-all">All tunes</label>
-				</div>
-				<div class="form-check">
-					<input class="form-check-input" type="radio" id="rsg-settings-form-ca-booklet" v-model="tuneset" value="ca-booklet"/>
-					<label class="form-check-label" for="rsg-settings-form-ca-booklet">Cultural appropriation booklet</label>
-				</div>
+
 				<div class="form-check">
 					<input class="form-check-input" type="radio" id="rsg-settings-form-custom" v-model="tuneset" value="custom"/>
 					<label class="form-check-label" for="rsg-settings-form-custom">Custom selection</label>

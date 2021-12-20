@@ -1,8 +1,7 @@
-import { MIN_PULL_INTERVAL, SHEETBOOK_DIR, SHEETBOOK_REPO } from '../../../config';
+import { MIN_PULL_INTERVAL, SHEETBOOK_DIR, SHEETBOOK_REPO, TUNE_DISPLAY_NAME, TUNE_SETS } from '../../../config';
 import { fileExists } from './utils';
 import { gitClone, gitFetch, resolveTuneSet, extractExistingTunes, gitLsTree, sortTunes } from 'ror-sheetbook-generator/src';
-import { TuneSet, TunesInfo } from 'ror-sheetbook-common';
-import { upperFirst } from 'lodash';
+import { TunesInfo } from 'ror-sheetbook-common';
 
 let lastPull: number | undefined = undefined;
 
@@ -28,11 +27,8 @@ export async function getTunesInfo(treeish: string): Promise<TunesInfo> {
     return {
         existingTunes: existingTunes.map((tuneName) => ({
             name: tuneName,
-            displayName: {
-                network: 'Network & Principles',
-                player: 'RoR Player & Tube'
-            }[tuneName] ?? tuneName.split(/[-_]/).map(upperFirst).join(' ')
+            displayName: TUNE_DISPLAY_NAME(tuneName)
         })),
-        tuneSets: Object.fromEntries(Object.values(TuneSet).map((set) => [set, [...resolveTuneSet(set, existingTunes)]])) as Record<TuneSet, string[]>
+        tuneSets: Object.fromEntries(Object.keys(TUNE_SETS).map((set) => [set, [...resolveTuneSet(set, existingTunes)]]))
     };
 }

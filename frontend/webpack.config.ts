@@ -104,6 +104,9 @@ export default (env: any, argv: any): Configuration => {
 					"favicon.svg"
 				].map((file) => ({ from: `${__dirname}/assets/${file}` }))
 			}),
+			new webpack.DefinePlugin({
+				'process.env': {}
+			}),
 			...(isDev ? [
 				new webpack.HotModuleReplacementPlugin()
 			] : [

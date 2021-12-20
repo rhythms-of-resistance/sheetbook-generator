@@ -2,7 +2,7 @@ import * as z from 'zod';
 
 export interface TunesInfo {
     existingTunes: Array<{ name: string; displayName: string }>;
-    tuneSets: Record<TuneSet, string[]>;
+    tuneSets: Record<string, string[]>;
 }
 
 export enum SheetType {
@@ -24,22 +24,6 @@ export enum SheetFormat {
 
 export const sheetFormatValidator = z.nativeEnum(SheetFormat);
 
-export enum TuneSet {
-    /** All tunes that can be found in the repository (including breaks, network description and dances) */
-    ALL = 'all',
-
-    /**
-     * All tunes that can be found in the repository (including breaks, network description and dances),
-     * except controversial cultural appropriation tunes.
-     */
-    NO_CA = 'no-ca',
-
-    /** Cultural appropriation booklet. */
-    CA_BOOKLET = 'ca-booklet'
-}
-
-export const tuneSetValidator = z.nativeEnum(TuneSet);
-
 export const singleSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.SINGLE),
     tune: z.string(),
@@ -50,7 +34,7 @@ export type SingleSheetbookSpec = z.infer<typeof singleSheetbookSpecValidator>;
 
 export const multipleSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.MULTIPLE),
-    tunes: tuneSetValidator.or(z.array(z.string())),
+    tunes: z.string().or(z.array(z.string())),
     outDir: z.string()
 });
 
@@ -58,7 +42,7 @@ export type multipleSheetbookSpec = z.infer<typeof multipleSheetbookSpecValidato
 
 export const bookletSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.BOOKLET),
-    tunes: tuneSetValidator.or(z.array(z.string())),
+    tunes: z.string().or(z.array(z.string())),
     format: sheetFormatValidator,
     outFile: z.string()
 });

@@ -4,8 +4,8 @@ import { concatPdfs, convertOdToPdf, convertSvgToPdf, getNumberOfPages, pdfToPor
 import { promises as fs } from "fs";
 import dayjs from "dayjs";
 import { getCommitId } from "./git";
-import { CA_TUNES, TEMP_OPTIONS } from "../../config";
-import { SheetbookSpec, SheetFormat, SheetType, TuneSet } from "ror-sheetbook-common";
+import { TUNES_AFTER, TUNES_BEFORE, TEMP_OPTIONS, BLANK, TUNE_SETS, FRONT, BACK } from "../../config";
+import { SheetbookSpec, SheetFormat, SheetType } from "ror-sheetbook-common";
 
 /**
  * Generate the sheets with the given specifications. Since this method creates temporary files that it cleans up again afterwards,
@@ -35,15 +35,14 @@ export async function generateSheets(inDir: string, specs: SheetbookSpec[]): Pro
             }
         } else if (spec.type === SheetType.BOOKLET) {
             const resolvedTunes = resolveTuneSet(spec.tunes, existingTunes);
-            const frontWhich = resolvedTunes.size === 1 && resolvedTunes.has('cultural-appropriation-booklet') ? 'front_ca-booklet' : 'front';
-            const frontPdf = await generateFrontOrBackPdf(inDir, frontWhich, spec.tunes, commitId!);
-            const backPdf = await generateFrontOrBackPdf(inDir, "back", spec.tunes, commitId!);
+            const frontPdf = await generateFrontOrBackPdf(inDir, FRONT(spec, existingTunes), spec.tunes, commitId!);
+            const backPdf = await generateFrontOrBackPdf(inDir, BACK(spec, existingTunes), spec.tunes, commitId!);
             const orderedTunes = orderTunes(resolvedTunes, pageNumbers, spec.format);
 
             const unscaledBookletPdf = await file({ ...TEMP_OPTIONS, postfix: 'unscaled.pdf' });
             await concatPdfs([
                 frontPdf.path,
-                ...orderedTunes.map((tune) => tune === 'blank' ? `${inDir}/blank.pdf` : `${rotatedTunePdfs.path}/${tune}.pdf`),
+                ...orderedTunes.map((tune) => tune === BLANK ? `${inDir}/${BLANK}.pdf` : `${rotatedTunePdfs.path}/${tune}.pdf`),
                 backPdf.path
             ], unscaledBookletPdf.path);
 
@@ -120,12 +119,12 @@ async function generateRotatedTunePdfs(tunePdfs: DirectoryResult, tunes: Set<str
  * Generates the front or back cover as PDF. These are generated from their SVG files in the sheetbook repository. The SVG
  * files can contain placeholders for the current month+year and the current git commit ID, which are filled in by this method.
  * @param inDir The directory to the local working copy of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
- * @param which Whether to generate the front or back cover
+ * @param which File name (without extension) of the cover to use, for example "front" or "back"
  * @param tunes The selected (unresolved) tune set. This is used to generate a suffix to the sheetbook version, for example "(all)" or "(no-ca)".
  * @param commitId The git commit id, as resolved by getCommitId()
  * @return The temporary file containing the cover PDF. Call the cleanup method when you are done.
  */
-async function generateFrontOrBackPdf(inDir: string, which: 'front' | 'front_ca-booklet' | 'back', tunes: TuneSet | string[], commitId: string): Promise<FileResult> {
+async function generateFrontOrBackPdf(inDir: string, which: string, tunes: string | string[], commitId: string): Promise<FileResult> {
     const [frontSvgTemplate, tmpSvg, result] = await Promise.all([
         fs.readFile(`${inDir}/${which}.svg`).then((b) => b.toString('utf8')),
         file({ ...TEMP_OPTIONS, postfix: `${which}.svg` }),
@@ -181,23 +180,13 @@ export function extractExistingTunes(files: string[]): string[] {
  * @param tunes The tune set
  * @param existingTunes The list of existing tunes as returned by getExistingTunes
  */
-export function resolveTuneSet(tunes: TuneSet | string[], existingTunes: string[]): Set<string> {
+export function resolveTuneSet(tunes: string | string[], existingTunes: string[]): Set<string> {
     if (typeof tunes !== 'string') {
         return new Set(tunes);
-    }
-
-    switch (tunes) {
-        case TuneSet.ALL:
-            return new Set(existingTunes.filter((t) => !['breaks_large', 'cultural-appropriation-booklet'].includes(t)));
-
-        case TuneSet.NO_CA:
-            return new Set(existingTunes.filter((t) => !['breaks_large', 'cultural-appropriation-booklet'].includes(t) && !CA_TUNES.includes(t)));
-
-        case TuneSet.CA_BOOKLET:
-            return new Set(['cultural-appropriation-booklet']);
-
-        default:
-            return new Set();
+    } else if (Object.prototype.hasOwnProperty.call(TUNE_SETS, tunes)) {
+        return new Set(TUNE_SETS[tunes].pick(existingTunes));
+    } else {
+        return new Set();
     }
 }
 
@@ -208,7 +197,7 @@ export function resolveTuneSet(tunes: TuneSet | string[], existingTunes: string[
  */
 function getTotalPageNumber(tunes: string[], pageNumbers: Map<string, number>): number {
     return tunes.map((t) => {
-        if (t === 'blank') {
+        if (t === BLANK) {
             return 1;
         }
 
@@ -220,20 +209,15 @@ function getTotalPageNumber(tunes: string[], pageNumbers: Map<string, number>): 
     }).reduce((p, c) => p + c, 0);
 }
 
-/** Sections that should appear before the alphabetically ordered tunes section, in this order. */
-const BEFORE_TUNES = ['history', 'network', 'cultural-appropriation-summary', 'player', 'breaks', 'breaks_large'];
-/** Sections that should appear after the alphabetically ordered tunes section, in this order. */
-const AFTER_TUNES = ['dances', 'cultural-appropriation-booklet'];
-
 /**
  * Returns the given selection of tunes sorted as they would appear in a sheetbook, without reordering to match double pages
  * and without inserting blank pages.
  */
 export function sortTunes(tunes: Set<string>): string[] {
     return [
-        ...BEFORE_TUNES.filter((t) => tunes.has(t)),
-        ...[...tunes].filter((t) => !BEFORE_TUNES.includes(t) && !AFTER_TUNES.includes(t)).sort(),
-        ...AFTER_TUNES.filter((t) => tunes.has(t))
+        ...TUNES_BEFORE.filter((t) => tunes.has(t)),
+        ...[...tunes].filter((t) => !TUNES_BEFORE.includes(t) && !TUNES_AFTER.includes(t)).sort(),
+        ...TUNES_AFTER.filter((t) => tunes.has(t))
     ];
 }
 
@@ -251,14 +235,14 @@ function orderTunes(tunes: Set<string>, pageNumbers: Map<string, number>, format
     const result: string[] = [];
     const totalPages = () => getTotalPageNumber(result, pageNumbers);
 
-    result.push(...BEFORE_TUNES.filter((t) => tunes.has(t)));
+    result.push(...TUNES_BEFORE.filter((t) => tunes.has(t)));
 
-    result.push(...alignTunes([...tunes].filter((t) => !BEFORE_TUNES.includes(t) && !AFTER_TUNES.includes(t)).sort(), pageNumbers, totalPages()));
+    result.push(...alignTunes([...tunes].filter((t) => !TUNES_BEFORE.includes(t) && !TUNES_AFTER.includes(t)).sort(), pageNumbers, totalPages()));
 
-    result.push(...AFTER_TUNES.filter((t) => tunes.has(t)));
+    result.push(...TUNES_AFTER.filter((t) => tunes.has(t)));
 
     while (!(format === SheetFormat.A4 ? [0, 2] : [2]).includes(totalPages() % 4)) {
-        result.push('blank');
+        result.push(BLANK);
     }
 
     return result;
