@@ -133,7 +133,7 @@ async function generateFrontOrBackPdf(inDir: string, which: string, tunes: strin
 
     const frontSvg = frontSvgTemplate
         .replace(/\[month\]/g, dayjs().format("MMMM YYYY"))
-        .replace(/\[version\]/g, `${commitId} (${typeof tunes === 'string' ? tunes : 'custom'})`);
+        .replace(/\[version\]/g, `${commitId} (${typeof tunes === 'string' ? tunes : `custom ${getTunesHash(tunes)}`})`);
 
     await fs.writeFile(tmpSvg.path, frontSvg, { encoding: 'utf8' });
 
@@ -143,6 +143,11 @@ async function generateFrontOrBackPdf(inDir: string, which: string, tunes: strin
         await tmpSvg.cleanup();
     }
     return result;
+}
+
+function getTunesHash(tunes: string[]): string {
+    // See https://stackoverflow.com/questions/6122571/simple-non-secure-hash-function-for-javascript#comment111181647_8831937
+    return Array.from(tunes.join(',')).reduce((hash, char) => 0 | (31 * hash + char.charCodeAt(0)), 0).toString(16);
 }
 
 /**
