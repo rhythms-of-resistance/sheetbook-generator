@@ -1,6 +1,6 @@
 import { MIN_PULL_INTERVAL, SHEETBOOK_DIR, SHEETBOOK_REPO } from '../../../config';
 import { fileExists } from './utils';
-import { gitClone, gitFetch, resolveTuneSet, extractExistingTunes, gitLsTree } from 'ror-sheetbook-generator/src';
+import { gitClone, gitFetch, resolveTuneSet, extractExistingTunes, gitLsTree, sortTunes } from 'ror-sheetbook-generator/src';
 import { TuneSet, TunesInfo } from 'ror-sheetbook-common';
 import { upperFirst } from 'lodash';
 
@@ -24,11 +24,14 @@ export async function pull(): Promise<void> {
 export async function getTunesInfo(treeish: string): Promise<TunesInfo> {
     await pull();
 
-    const existingTunes = extractExistingTunes(await gitLsTree(SHEETBOOK_DIR, treeish, { nameOnly: true }));
+    const existingTunes = sortTunes(new Set(extractExistingTunes(await gitLsTree(SHEETBOOK_DIR, treeish, { nameOnly: true }))));
     return {
-        existingTunes: ['network', 'breaks', ...existingTunes.filter((t) => !['breaks', 'network', 'dances'].includes(t)).sort(), 'dances'].map((tuneName) => ({
+        existingTunes: existingTunes.map((tuneName) => ({
             name: tuneName,
-            displayName: { network: 'Network description' }[tuneName] ?? tuneName.split('-').map(upperFirst).join(' ')
+            displayName: {
+                network: 'Network & Principles',
+                player: 'RoR Player & Tube'
+            }[tuneName] ?? tuneName.split('-').map(upperFirst).join(' ')
         })),
         tuneSets: Object.fromEntries(Object.values(TuneSet).map((set) => [set, [...resolveTuneSet(set, existingTunes)]])) as Record<TuneSet, string[]>
     };

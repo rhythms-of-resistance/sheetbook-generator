@@ -172,7 +172,10 @@ export async function getExistingTunes(inDir: string): Promise<string[]> {
  */
 export function extractExistingTunes(files: string[]): string[] {
     return [
+        'cultural-appropriation-summary',
+        'history',
         'network',
+        'player',
         ...files.map((f) => f.match(/([^/]+)\.ods$/)?.[1]).filter((f) => f && f !== 'breaks_large') as string[]
     ];
 }
@@ -218,6 +221,23 @@ function getTotalPageNumber(tunes: string[], pageNumbers: Map<string, number>): 
     }).reduce((p, c) => p + c, 0);
 }
 
+/** Sections that should appear before the alphabetically ordered tunes section, in this order. */
+const BEFORE_TUNES = ['history', 'network', 'cultural-appropriation-summary', 'player', 'breaks'];
+/** Sections that should appear after the alphabetically ordered tunes section, in this order. */
+const AFTER_TUNES = ['dances'];
+
+/**
+ * Returns the given selection of tunes sorted as they would appear in a sheetbook, without reordering to match double pages
+ * and without inserting blank pages.
+ */
+export function sortTunes(tunes: Set<string>): string[] {
+    return [
+        ...BEFORE_TUNES.filter((t) => tunes.has(t)),
+        ...[...tunes].filter((t) => !BEFORE_TUNES.includes(t) && !AFTER_TUNES.includes(t)).sort(),
+        ...AFTER_TUNES.filter((t) => tunes.has(t))
+    ];
+}
+
 /**
  * Orders the given list of tunes to be concatenated. network and breaks come first, dances come last. Everything else is ordered
  * alphabetically. Blank pages are inserted to make sure that the total number of pages is dividable by 2 (for A4) or by 4 (for A5/A6).
@@ -232,22 +252,11 @@ function orderTunes(tunes: Set<string>, pageNumbers: Map<string, number>, format
     const result: string[] = [];
     const totalPages = () => getTotalPageNumber(result, pageNumbers);
 
-    if (tunes.has('network')) {
-        result.push('network');
-    }
-    if (tunes.has('breaks')) {
-        result.push('breaks');
-    }
+    result.push(...BEFORE_TUNES.filter((t) => tunes.has(t)));
 
-    result.push(...alignTunes([...tunes].filter((t) => !['breaks', 'network', 'dances'].includes(t)).sort(), pageNumbers, totalPages()));
+    result.push(...alignTunes([...tunes].filter((t) => !BEFORE_TUNES.includes(t) && !AFTER_TUNES.includes(t)).sort(), pageNumbers, totalPages()));
 
-    while (totalPages() % 2 > 0) {
-        result.push('blank');
-    }
-
-    if (tunes.has('dances')) {
-        result.push('dances');
-    }
+    result.push(...AFTER_TUNES.filter((t) => tunes.has(t)));
 
     while (!(format === SheetFormat.A4 ? [0, 2] : [2]).includes(totalPages() % 4)) {
         result.push('blank');
