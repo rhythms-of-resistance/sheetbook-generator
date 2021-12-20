@@ -32,7 +32,10 @@ export enum TuneSet {
      * All tunes that can be found in the repository (including breaks, network description and dances),
      * except controversial cultural appropriation tunes.
      */
-    NO_CA = 'no-ca'
+    NO_CA = 'no-ca',
+
+    /** Cultural appropriation booklet. */
+    CA_BOOKLET = 'ca-booklet'
 }
 
 export const tuneSetValidator = z.nativeEnum(TuneSet);

@@ -31,7 +31,7 @@ export async function getTunesInfo(treeish: string): Promise<TunesInfo> {
             displayName: {
                 network: 'Network & Principles',
                 player: 'RoR Player & Tube'
-            }[tuneName] ?? tuneName.split('-').map(upperFirst).join(' ')
+            }[tuneName] ?? tuneName.split(/[-_]/).map(upperFirst).join(' ')
         })),
         tuneSets: Object.fromEntries(Object.values(TuneSet).map((set) => [set, [...resolveTuneSet(set, existingTunes)]])) as Record<TuneSet, string[]>
     };

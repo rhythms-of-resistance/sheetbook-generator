@@ -37,10 +37,10 @@ const args = yargs(hideBin(process.argv))
         '\n' +
         '<format> can be A4 (booklet of portrait A4 pages), A5 (booklet with two A5 portrait pages per landscape A4 page) or A6 (double booklet with four portrait A6 pages per portrait A4 page).\n' +
         '\n' +
-        '<tunes> can be a list of tunes (comma-separated), "all" (for all tunes) or "no-ca" (for all except controversial cultural appropriation tunes).\n' +
+        '<tunes> can be a list of tunes (comma-separated), "all" (for all tunes), "no-ca" (for all except controversial cultural appropriation tunes) or "ca-booklet" (cultural appropriation booklet).\n' +
         '\n' +
         'To generate all tunesheets in all sizes:\n' +
-        '$0 -i /sheetbook -o /sheetbook/generated single:all booklet:{a4,a5,a6}:{all,no-ca}'
+        '$0 -i /sheetbook -o /sheetbook/generated single:all booklet:{a4,a5,a6}:{all,no-ca,ca-booklet}'
     )
     .parse();
 
@@ -59,11 +59,16 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
             if (!Object.values(SheetFormat).includes(split[1] as SheetFormat)) {
                 throw new Error(`Unknown format: ${split[1]}`);
             }
+            const filename = (
+                split[2] === TuneSet.CA_BOOKLET ? `${split[2]}-${split[1]}` :
+                Object.values(TuneSet).includes(split[2] as TuneSet) ? `tunesheet-${split[1]}-${split[2]}` :
+                `tunesheet-${split[1]}-custom${customCounter++ > 0 ? customCounter : ''}`
+            );
             return {
                 type: SheetType.BOOKLET,
                 tunes: Object.values(TuneSet).includes(split[2] as TuneSet) ? split[2] as TuneSet : split[2].split(','),
                 format: split[1] as SheetFormat,
-                outFile: `${outDir}/tunesheet-${split[1]}-${Object.values(TuneSet).includes(split[2] as TuneSet) ? split[2] : `custom${customCounter++ > 0 ? customCounter : ''}`}.pdf`
+                outFile: `${outDir}/${filename}.pdf`
             };
         } else {
             throw new Error(`Unknown sheet type: ${split[0]}`);

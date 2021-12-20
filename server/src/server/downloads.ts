@@ -1,4 +1,4 @@
-import { SheetbookRequestSpec, SheetType } from "ror-sheetbook-common";
+import { SheetbookRequestSpec, SheetType, TuneSet } from "ror-sheetbook-common";
 import { DOWNLOAD_PRESERVE_TIME, DOWNLOADS_DIR, TEMP_DIR, GENERATE_SHEET_TIMEOUT } from "../../../config";
 import { v4 as uuid } from 'uuid';
 import mkdirp from 'mkdirp';
@@ -16,7 +16,11 @@ export async function createSheet({ treeish, ...spec }: SheetbookRequestSpec, lo
 	await mkdirp(`${TEMP_DIR}/${id}`);
 
 	try {
-		const filename = spec.type === SheetType.SINGLE ? spec.tune : `tunesheet-${spec.format}-${typeof spec.tunes === 'string' ? spec.tunes : 'custom'}`;
+		const filename = (
+			spec.type === SheetType.SINGLE ? spec.tune :
+			spec.tunes === TuneSet.CA_BOOKLET ? `${spec.tunes}-${spec.format}` :
+			`tunesheet-${spec.format}-${typeof spec.tunes === 'string' ? spec.tunes : 'custom'}`
+		);
 		const req: GenerateRequestMessage = {
 			id,
 			spec: {

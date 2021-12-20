@@ -25,7 +25,7 @@ export default class SettingsForm extends Vue {
 	fitAddon!: FitAddon;
 
 	format: 'booklet-a4' | 'booklet-a5' | 'booklet-a6' | 'single' = 'booklet-a4';
-	tuneset: 'no-ca' | 'all' | 'custom' = 'no-ca';
+	tuneset: 'no-ca' | 'all' | 'ca-booklet' | 'custom' = 'no-ca';
 	tunes: string[] = [];
 	tune: string = 'breaks';
 
@@ -84,7 +84,7 @@ export default class SettingsForm extends Vue {
 			} : {
 				type: SheetType.BOOKLET,
 				format: this.format === 'booklet-a6' ? SheetFormat.A6 : this.format === 'booklet-a5' ? SheetFormat.A5 : SheetFormat.A4,
-				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : this.tunes,
+				tunes: this.tuneset === 'no-ca' ? TuneSet.NO_CA : this.tuneset === 'all' ? TuneSet.ALL : this.tuneset === 'ca-booklet' ? TuneSet.CA_BOOKLET : this.tunes,
 				treeish: 'develop'
 			};
 

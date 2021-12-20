@@ -34,9 +34,11 @@ export async function generateSheets(inDir: string, specs: SheetbookSpec[]): Pro
                 await scalePdfToA4(`${tunePdfs.path}/${tune}.pdf`, `${spec.outDir}/${tune}.pdf`);
             }
         } else if (spec.type === SheetType.BOOKLET) {
-            const frontPdf = await generateFrontOrBackPdf(inDir, "front", spec.tunes, commitId!);
+            const resolvedTunes = resolveTuneSet(spec.tunes, existingTunes);
+            const frontWhich = resolvedTunes.size === 1 && resolvedTunes.has('cultural-appropriation-booklet') ? 'front_ca-booklet' : 'front';
+            const frontPdf = await generateFrontOrBackPdf(inDir, frontWhich, spec.tunes, commitId!);
             const backPdf = await generateFrontOrBackPdf(inDir, "back", spec.tunes, commitId!);
-            const orderedTunes = orderTunes(resolveTuneSet(spec.tunes, existingTunes), pageNumbers, spec.format);
+            const orderedTunes = orderTunes(resolvedTunes, pageNumbers, spec.format);
 
             const unscaledBookletPdf = await file({ ...TEMP_OPTIONS, postfix: 'unscaled.pdf' });
             await concatPdfs([
@@ -123,7 +125,7 @@ async function generateRotatedTunePdfs(tunePdfs: DirectoryResult, tunes: Set<str
  * @param commitId The git commit id, as resolved by getCommitId()
  * @return The temporary file containing the cover PDF. Call the cleanup method when you are done.
  */
-async function generateFrontOrBackPdf(inDir: string, which: 'front' | 'back', tunes: TuneSet | string[], commitId: string): Promise<FileResult> {
+async function generateFrontOrBackPdf(inDir: string, which: 'front' | 'front_ca-booklet' | 'back', tunes: TuneSet | string[], commitId: string): Promise<FileResult> {
     const [frontSvgTemplate, tmpSvg, result] = await Promise.all([
         fs.readFile(`${inDir}/${which}.svg`).then((b) => b.toString('utf8')),
         file({ ...TEMP_OPTIONS, postfix: `${which}.svg` }),
@@ -163,7 +165,7 @@ async function getPageNumbers(tunePdfs: DirectoryResult, tunes: Set<string>): Pr
  * @param inDir The directory to the local working copy of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
  */
 export async function getExistingTunes(inDir: string): Promise<string[]> {
-    return extractExistingTunes(await globby(`${inDir}/*.ods`));
+    return extractExistingTunes(await globby(`${inDir}/*.od{s,t}`));
 }
 
 /**
@@ -171,13 +173,7 @@ export async function getExistingTunes(inDir: string): Promise<string[]> {
  * @params files A list of filenames of the root directory of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
  */
 export function extractExistingTunes(files: string[]): string[] {
-    return [
-        'cultural-appropriation-summary',
-        'history',
-        'network',
-        'player',
-        ...files.map((f) => f.match(/([^/]+)\.ods$/)?.[1]).filter((f) => f && f !== 'breaks_large') as string[]
-    ];
+    return files.map((f) => f.match(/([^/]+)\.od(s|t)$/)?.[1]).filter((f) => f) as string[];
 }
 
 /**
@@ -192,10 +188,13 @@ export function resolveTuneSet(tunes: TuneSet | string[], existingTunes: string[
 
     switch (tunes) {
         case TuneSet.ALL:
-            return new Set(existingTunes);
+            return new Set(existingTunes.filter((t) => !['breaks_large', 'cultural-appropriation-booklet'].includes(t)));
 
         case TuneSet.NO_CA:
-            return new Set(existingTunes.filter((t) => !CA_TUNES.includes(t)));
+            return new Set(existingTunes.filter((t) => !['breaks_large', 'cultural-appropriation-booklet'].includes(t) && !CA_TUNES.includes(t)));
+
+        case TuneSet.CA_BOOKLET:
+            return new Set(['cultural-appropriation-booklet']);
 
         default:
             return new Set();
@@ -222,9 +221,9 @@ function getTotalPageNumber(tunes: string[], pageNumbers: Map<string, number>): 
 }
 
 /** Sections that should appear before the alphabetically ordered tunes section, in this order. */
-const BEFORE_TUNES = ['history', 'network', 'cultural-appropriation-summary', 'player', 'breaks'];
+const BEFORE_TUNES = ['history', 'network', 'cultural-appropriation-summary', 'player', 'breaks', 'breaks_large'];
 /** Sections that should appear after the alphabetically ordered tunes section, in this order. */
-const AFTER_TUNES = ['dances'];
+const AFTER_TUNES = ['dances', 'cultural-appropriation-booklet'];
 
 /**
  * Returns the given selection of tunes sorted as they would appear in a sheetbook, without reordering to match double pages

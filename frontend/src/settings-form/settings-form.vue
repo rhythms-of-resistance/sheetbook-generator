@@ -34,6 +34,10 @@
 					<label class="form-check-label" for="rsg-settings-form-all">All tunes</label>
 				</div>
 				<div class="form-check">
+					<input class="form-check-input" type="radio" id="rsg-settings-form-ca-booklet" v-model="tuneset" value="ca-booklet"/>
+					<label class="form-check-label" for="rsg-settings-form-ca-booklet">Cultural appropriation booklet</label>
+				</div>
+				<div class="form-check">
 					<input class="form-check-input" type="radio" id="rsg-settings-form-custom" v-model="tuneset" value="custom"/>
 					<label class="form-check-label" for="rsg-settings-form-custom">Custom selection</label>
 					<template v-if="tuneset === 'custom'">
