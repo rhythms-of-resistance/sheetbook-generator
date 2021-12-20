@@ -1,4 +1,4 @@
-<div class="container rsg-main pt-4">
+<div class="container rsg-main pt-4 pb-4">
 	<h1>RoR Sheetbook Generator</h1>
 	<p>
 		Customize the settings below to generate a RoR sheetbook PDF. The sheetbook will be generated on the fly from the

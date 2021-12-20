@@ -42,7 +42,7 @@ export async function createSheet({ treeish, ...spec }: SheetbookRequestSpec, lo
 				if (signal) {
 					reject(new Error(`generator was terminated by signal ${signal}`));
 				} else if (code !== 0) {
-					reject(new Error(`generator existed with code ${code}`));
+					reject(new Error(`generator exited with code ${code}`));
 				} else {
 					resolve(`/downloads/${id}/${filename}.pdf`);
 				}
