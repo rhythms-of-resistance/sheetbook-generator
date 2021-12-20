@@ -82,8 +82,21 @@ export const BACK = (spec: BookletSheetbookSpec, existingTunes: string[]): strin
 /** Map a tune filename to a tune display name. */
 export const TUNE_DISPLAY_NAME = (tuneName: string): string => (
     {
-        network: 'Network & Principles',
-        player: 'RoR Player & Tube'
+        'network': 'Network & Principles',
+        'cultural-appropriation-summary': 'Cultural Appropriation',
+        'player': 'RoR Player & Tube',
+        'breaks_large': 'Breaks (large)',
+        'afoxe': 'Afoxé',
+        'bhangra': 'Bhaṅgṛā',
+        'coupe-decale': 'Coupé-Décalé',
+        'drum-bass': 'Drum&Bass',
+        'hiphop': 'HipHop',
+        'nova-balanca': 'Nova Balança',
+        'trans-europa-express': 'Trans-Europa-Express',
+        'walc': 'Walc(z)',
+        'xango': 'Xangô',
+        'zurav-love': 'Żurav Love',
+        'cultural-appropriation-booklet': 'Cultural Appropriation (booklet)'
     }[tuneName] ?? tuneName.split(/[-_]/).map((p) => p[0].toUpperCase() + p.slice(1)).join(' ')
 );
 

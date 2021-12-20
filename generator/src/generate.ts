@@ -4,8 +4,9 @@ import { concatPdfs, convertOdToPdf, convertSvgToPdf, getNumberOfPages, pdfToPor
 import { promises as fs } from "fs";
 import dayjs from "dayjs";
 import { getCommitId } from "./git";
-import { TUNES_AFTER, TUNES_BEFORE, TEMP_OPTIONS, BLANK, TUNE_SETS, FRONT, BACK } from "../../config";
+import { TUNES_AFTER, TUNES_BEFORE, TEMP_OPTIONS, BLANK, TUNE_SETS, FRONT, BACK, TUNE_DISPLAY_NAME } from "../../config";
 import { SheetbookSpec, SheetFormat, SheetType } from "ror-sheetbook-common";
+import { escape } from "lodash";
 
 /**
  * Generate the sheets with the given specifications. Since this method creates temporary files that it cleans up again afterwards,
@@ -35,9 +36,9 @@ export async function generateSheets(inDir: string, specs: SheetbookSpec[]): Pro
             }
         } else if (spec.type === SheetType.BOOKLET) {
             const resolvedTunes = resolveTuneSet(spec.tunes, existingTunes);
-            const frontPdf = await generateFrontOrBackPdf(inDir, FRONT(spec, existingTunes), spec.tunes, commitId!);
-            const backPdf = await generateFrontOrBackPdf(inDir, BACK(spec, existingTunes), spec.tunes, commitId!);
             const orderedTunes = orderTunes(resolvedTunes, pageNumbers, spec.format);
+            const frontPdf = await generateFrontOrBackPdf(inDir, FRONT(spec, existingTunes), spec.tunes, orderedTunes, commitId!);
+            const backPdf = await generateFrontOrBackPdf(inDir, BACK(spec, existingTunes), spec.tunes, orderedTunes, commitId!);
 
             const unscaledBookletPdf = await file({ ...TEMP_OPTIONS, postfix: 'unscaled.pdf' });
             await concatPdfs([
@@ -124,18 +125,19 @@ async function generateRotatedTunePdfs(tunePdfs: DirectoryResult, tunes: Set<str
  * @param commitId The git commit id, as resolved by getCommitId()
  * @return The temporary file containing the cover PDF. Call the cleanup method when you are done.
  */
-async function generateFrontOrBackPdf(inDir: string, which: string, tunes: string | string[], commitId: string): Promise<FileResult> {
-    const [frontSvgTemplate, tmpSvg, result] = await Promise.all([
+async function generateFrontOrBackPdf(inDir: string, which: string, tunes: string | string[], orderedTunes: string[], commitId: string): Promise<FileResult> {
+    const [svgTemplate, tmpSvg, result] = await Promise.all([
         fs.readFile(`${inDir}/${which}.svg`).then((b) => b.toString('utf8')),
         file({ ...TEMP_OPTIONS, postfix: `${which}.svg` }),
         file({ ...TEMP_OPTIONS, postfix: `${which}.pdf` })
     ]);
 
-    const frontSvg = frontSvgTemplate
+    const svg = svgTemplate
         .replace(/\[month\]/g, dayjs().format("MMMM YYYY"))
-        .replace(/\[version\]/g, `${commitId} (${typeof tunes === 'string' ? tunes : `custom ${getTunesHash(tunes)}`})`);
+        .replace(/\[version\]/g, `${commitId} (${typeof tunes === 'string' ? tunes : `custom ${getTunesHash(tunes)}`})`)
+        .replace(/\[index\]/g, `Content:</tspan>${orderedTunes.filter((t) => t !== BLANK).map((t, i) => `<tspan x="0" dy="${i === 0 ? '1.5em' : '1em'}">${escape(TUNE_DISPLAY_NAME(t))}`).join('</tspan>')}`);
 
-    await fs.writeFile(tmpSvg.path, frontSvg, { encoding: 'utf8' });
+    await fs.writeFile(tmpSvg.path, svg, { encoding: 'utf8' });
 
     await convertSvgToPdf(tmpSvg.path, result.path);
 
