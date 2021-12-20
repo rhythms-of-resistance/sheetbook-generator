@@ -14,8 +14,8 @@ export async function getCommitId(dir: string): Promise<string> {
  * @param repoUrl The URL of the git repository
  * @param dir The directory to be created for the clone
  */
-export async function gitClone(repoUrl: string, dir: string, { bare, noCheckout }: { bare?: boolean; noCheckout?: boolean } = { }): Promise<void> {
-    await $`git clone ${bare ? '--bare' : []} ${noCheckout ? '--no-checkout' : []} ${repoUrl} ${dir}`;
+export async function gitClone(repoUrl: string, dir: string, { mirror, noCheckout }: { mirror?: boolean; noCheckout?: boolean } = { }): Promise<void> {
+    await $`git clone ${mirror ? '--mirror' : []} ${noCheckout ? '--no-checkout' : []} ${repoUrl} ${dir}`;
 }
 
 /**

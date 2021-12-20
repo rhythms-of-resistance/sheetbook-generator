@@ -8,7 +8,7 @@ let lastPull: number | undefined = undefined;
 
 export async function cloneRepository(): Promise<void> {
     if (!await fileExists(SHEETBOOK_DIR)) {
-        await gitClone(SHEETBOOK_REPO, SHEETBOOK_DIR, { bare: true });
+        await gitClone(SHEETBOOK_REPO, SHEETBOOK_DIR, { mirror: true });
     }
 }
 
