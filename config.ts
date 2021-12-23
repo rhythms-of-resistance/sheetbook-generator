@@ -67,9 +67,6 @@ export const TUNE_SETS: Record<string, { label: string; pick: (existingTunes: st
     }
 };
 
-/** File name of the PDF file containing a blank page (without extension). */
-export const BLANK = 'blank';
-
 /** File name of the front cover PDF file (without extension). */
 export const FRONT = (spec: BookletSheetbookSpec, existingTunes: string[]): string => {
     const tunes = Array.isArray(spec.tunes) ? spec.tunes : Object.prototype.hasOwnProperty.call(TUNE_SETS, spec.tunes) ? TUNE_SETS[spec.tunes].pick(existingTunes) : [];

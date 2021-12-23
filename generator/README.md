@@ -9,6 +9,7 @@ To use the Node.js library or to run the CLI outside of its Docker image, the fo
 * `inkscape` is used to convert SVG files to PDF
 * `pdfinfo` (provided by `poppler-utils` or `poppler`) is used to get page size and page count information
 * `pdfjam` (provided by `texlive`) is used to scale pages to A4/A5/A6 and to put multiple A5/A6 pages onto each A4 page
+* `xetex` is used to concatenate/rotate PDF pages and add page numbers
 * `qpdf` is used to concatenate PDF pages
 * `git` is used to extract information about the sheetbook version
 

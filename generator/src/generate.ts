@@ -1,10 +1,10 @@
 import { dir, DirectoryResult, file, FileResult } from "tmp-promise";
 import { globby } from "zx";
-import { concatPdfs, convertOdToPdf, convertSvgToPdf, getNumberOfPages, pdfToPortrait, scalePdfToA4, scalePdfToA5Booklet, scalePdfToA6Booklet } from "./convert";
+import { BLANK, concatPdfsToPortraitA4WithPageNumbers, convertOdToPdf, convertSvgToPdf, getNumberOfPages, scalePdfToA4, scalePdfToA5Booklet, scalePdfToA6Booklet } from "./convert";
 import { promises as fs } from "fs";
 import dayjs from "dayjs";
 import { getCommitId } from "./git";
-import { TUNES_AFTER, TUNES_BEFORE, TEMP_OPTIONS, BLANK, TUNE_SETS, FRONT, BACK, TUNE_DISPLAY_NAME } from "../../config";
+import { TUNES_AFTER, TUNES_BEFORE, TEMP_OPTIONS, TUNE_SETS, FRONT, BACK, TUNE_DISPLAY_NAME } from "../../config";
 import { SheetbookSpec, SheetFormat, SheetType } from "ror-sheetbook-common";
 import { escape } from "lodash";
 
@@ -24,8 +24,7 @@ export async function generateSheets(inDir: string, specs: SheetbookSpec[]): Pro
     const bookletTunes = specs.flatMap((spec) => spec.type === SheetType.BOOKLET ? [...resolveTuneSet(spec.tunes, existingTunes)] : []);
 
     const tunePdfs = await generateTunePdfs(inDir, new Set([...singleTunes, ...bookletTunes]));
-    const rotatedTunePdfs = await generateRotatedTunePdfs(tunePdfs, new Set(bookletTunes));
-    const pageNumbers = await getPageNumbers(rotatedTunePdfs, new Set([...bookletTunes]));
+    const pageNumbers = await getPageNumbers(tunePdfs, new Set([...bookletTunes]));
 
     for (const spec of specs) {
         if (spec.type === SheetType.SINGLE) {
@@ -37,29 +36,32 @@ export async function generateSheets(inDir: string, specs: SheetbookSpec[]): Pro
         } else if (spec.type === SheetType.BOOKLET) {
             const resolvedTunes = resolveTuneSet(spec.tunes, existingTunes);
             const orderedTunes = orderTunes(resolvedTunes, pageNumbers, spec.format);
-            const frontPdf = await generateFrontOrBackPdf(inDir, FRONT(spec, existingTunes), spec.tunes, orderedTunes, commitId!);
-            const backPdf = await generateFrontOrBackPdf(inDir, BACK(spec, existingTunes), spec.tunes, orderedTunes, commitId!);
-
-            const unscaledBookletPdf = await file({ ...TEMP_OPTIONS, postfix: 'unscaled.pdf' });
-            await concatPdfs([
+            const frontPdf = await generateFrontOrBackPdf(inDir, FRONT(spec, existingTunes), spec.tunes, orderedTunes, pageNumbers, commitId!);
+            const backPdf = await generateFrontOrBackPdf(inDir, BACK(spec, existingTunes), spec.tunes, orderedTunes, pageNumbers, commitId!);
+            const files = [
                 frontPdf.path,
-                ...orderedTunes.map((tune) => tune === BLANK ? `${inDir}/${BLANK}.pdf` : `${rotatedTunePdfs.path}/${tune}.pdf`),
+                ...orderedTunes.map((tune) => tune === BLANK ? BLANK : `${tunePdfs.path}/${tune}.pdf`),
                 backPdf.path
-            ], unscaledBookletPdf.path);
+            ];
 
             if (spec.format === SheetFormat.A4) {
-                await scalePdfToA4(unscaledBookletPdf.path, spec.outFile);
-            } else if (spec.format === SheetFormat.A5) {
-                await scalePdfToA5Booklet(unscaledBookletPdf.path, spec.outFile);
-            } else if (spec.format === SheetFormat.A6) {
-                await scalePdfToA6Booklet(unscaledBookletPdf.path, spec.outFile);
+                await concatPdfsToPortraitA4WithPageNumbers(files, spec.outFile);
+            } else if (spec.format === SheetFormat.A5 || spec.format === SheetFormat.A6) {
+                const a4BookletPdf = await file({ ...TEMP_OPTIONS, postfix: 'a4.pdf' });
+                await concatPdfsToPortraitA4WithPageNumbers(files, a4BookletPdf.path);
+                try {
+                    await (spec.format === SheetFormat.A5 ? scalePdfToA5Booklet : scalePdfToA6Booklet)(a4BookletPdf.path, spec.outFile);
+                } finally {
+                    if (!process.env.KEEP_TEMP) {
+                        await a4BookletPdf.cleanup();
+                    }
+                }
             } else {
                 throw new Error(`Unknown format: ${spec.format}`);
             }
 
             if (!process.env.KEEP_TEMP) {
                 await Promise.all([
-                    unscaledBookletPdf.cleanup(),
                     frontPdf.cleanup(),
                     backPdf.cleanup()
                 ]);
@@ -70,10 +72,7 @@ export async function generateSheets(inDir: string, specs: SheetbookSpec[]): Pro
     }
 
     if (!process.env.KEEP_TEMP) {
-        await Promise.all([
-            tunePdfs.cleanup(),
-            rotatedTunePdfs.cleanup()
-        ]);
+        await tunePdfs.cleanup();
     }
 }
 
@@ -100,23 +99,6 @@ async function generateTunePdfs(inDir: string, tunes: Set<string>): Promise<Dire
 }
 
 /**
- * Creates a copy of the tune PDFs in a new temporary directory, rotating the landscape files anti-clockwise to make sure that
- * all PDFs are portrait.
- * @param tunePdfs The temporary directory with the tune PDFs generated by generateTunePdfs()
- * @param tunes The tunes to rotate
- * @return The temporary directory where the PDFs were generated. Call the cleanup method when you are done.
- */
-async function generateRotatedTunePdfs(tunePdfs: DirectoryResult, tunes: Set<string>): Promise<DirectoryResult> {
-    const tmpDir = await dir({ ...TEMP_OPTIONS, postfix: 'tunes-rotated', unsafeCleanup: true });
-
-    for (const tune of tunes) {
-        await pdfToPortrait(`${tunePdfs.path}/${tune}.pdf`, `${tmpDir.path}/${tune}.pdf`);
-    }
-
-    return tmpDir;
-}
-
-/**
  * Generates the front or back cover as PDF. These are generated from their SVG files in the sheetbook repository. The SVG
  * files can contain placeholders for the current month+year and the current git commit ID, which are filled in by this method.
  * @param inDir The directory to the local working copy of the sheetbook repository (https://github.com/rhythms-of-resistance/sheetbook)
@@ -125,17 +107,33 @@ async function generateRotatedTunePdfs(tunePdfs: DirectoryResult, tunes: Set<str
  * @param commitId The git commit id, as resolved by getCommitId()
  * @return The temporary file containing the cover PDF. Call the cleanup method when you are done.
  */
-async function generateFrontOrBackPdf(inDir: string, which: string, tunes: string | string[], orderedTunes: string[], commitId: string): Promise<FileResult> {
+async function generateFrontOrBackPdf(inDir: string, which: string, tunes: string | string[], orderedTunes: string[], pageNumbers: Map<string, number>, commitId: string): Promise<FileResult> {
     const [svgTemplate, tmpSvg, result] = await Promise.all([
         fs.readFile(`${inDir}/${which}.svg`).then((b) => b.toString('utf8')),
         file({ ...TEMP_OPTIONS, postfix: `${which}.svg` }),
         file({ ...TEMP_OPTIONS, postfix: `${which}.pdf` })
     ]);
 
+    let totalPages = 0;
+    const index = orderedTunes.flatMap((t) => {
+        if (t === BLANK) {
+            totalPages++;
+            return [];
+        }
+
+        let page = 2 + totalPages;
+        totalPages += pageNumbers.get(t)!;
+        return [{
+            displayName: TUNE_DISPLAY_NAME(t),
+            page
+        }];
+    });
+
     const svg = svgTemplate
         .replace(/\[month\]/g, dayjs().format("MMMM YYYY"))
         .replace(/\[version\]/g, `${commitId} (${typeof tunes === 'string' ? tunes : `custom ${getTunesHash(tunes)}`})`)
-        .replace(/\[index\]/g, `Content:</tspan>${orderedTunes.filter((t) => t !== BLANK).map((t, i) => `<tspan x="0" dy="${i === 0 ? '1.5em' : '1em'}">${escape(TUNE_DISPLAY_NAME(t))}`).join('</tspan>')}`);
+        .replace(/\[index\]/g, `Content:</tspan>${index.map((t, i) => `<tspan x="0" dy="${i === 0 ? '1.5em' : '1em'}">${escape(t.displayName)}`).join('</tspan>')}`)
+        .replace(/\[pages\]/g, `</tspan>${index.map((t, i) => `<tspan x="0" dy="${i === 0 ? '1.5em' : '1em'}">${t.page}`).join('</tspan>')}`);
 
     await fs.writeFile(tmpSvg.path, svg, { encoding: 'utf8' });
 

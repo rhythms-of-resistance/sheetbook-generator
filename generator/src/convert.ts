@@ -1,6 +1,10 @@
 import { $ } from "zx";
-import { file } from "tmp-promise";
+import { dir, file } from "tmp-promise";
 import { TEMP_OPTIONS } from "../../config";
+import { promises as fs } from "fs";
+
+/** Represents an empty page. */
+export const BLANK = 'blank';
 
 /**
  * Convert one or multiple ODT or ODS files to PDF.
@@ -112,24 +116,66 @@ export async function scalePdfToA6Booklet(inFile: string, outFile: string): Prom
 }
 
 /**
- * Creates a copy of the given PDF file, with its orientation normalized to portrait. If the input file is already
- * in portrait mode, a simple copy of it is made. If the input file is in landscape mode, it is rotated anti-clockwise.
- * @param inFile The path of the input file
- * @param outFile The path of the output file to be generated
+ * Generates a PDF file that contains all the pages of all the input files concatenated, in order. Landscape pages
+ * are rotated anti-clockwise, so all output pages are portrait. Pages are scaled to A4. Page numbers are added
+ * on the top right of each page, except the first and last page.
+ * @param inFiles A list of PDF files or BLANK for empty pages.
  */
-export async function pdfToPortrait(inFile: string, outFile: string): Promise<void> {
-    if (await isLandscapePdf(inFile)) {
-        await $`qpdf ${inFile} --rotate=-90 ${outFile}`;
-    } else {
-        await $`cp ${inFile} ${outFile}`;
-    }
+export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], outFile: string): Promise<void> {
+    // Normally we would use the "book" document class and the \fancyfoot[LE,RO] position for the page numbers,
+    // but this will overlap with the content on rotated landscape pages. That's why for now we always put the
+    // page number on the top right.
+    await runPdfLatex(
+`\\documentclass{article}
+\\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm]{geometry}
+\\usepackage[final]{pdfpages}
+\\usepackage{fancyhdr}
+\\usepackage{fontspec}
+\\setmainfont{Arial}
+\\setlength{\\topmargin}{-17pt}
+\\fancyhead{}
+\\fancyhead[R]{\\small \\thepage}
+\\fancyfoot{}
+\\renewcommand{\\headrulewidth}{0pt}
+\\renewcommand{\\footrulewidth}{0pt}
+\\includepdfset{pages=-}
+
+% See https://tex.stackexchange.com/a/395847
+\\newsavebox{\\temp}
+\\newlength{\\tempwidth}
+\\newlength{\\tempheight}
+\\newcommand{\\addpdf}[2][fancy]{%
+    \\sbox{\\temp}{\\includegraphics{#2}}%
+    \\setlength{\\tempwidth}{\\widthof{\\usebox{\\temp}}}%
+    \\setlength{\\tempheight}{\\heightof{\\usebox{\\temp}}}%
+
+    \\ifthenelse{\\tempwidth > \\tempheight}
+        {\\includepdf[pagecommand=\\thispagestyle{#1},angle=90]{#2}}
+        {\\includepdf[pagecommand=\\thispagestyle{#1}]{#2}}
+}
+
+\\begin{document}
+    ${inFiles.map((f, i) => f === BLANK ? '\\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}`).join('\n    ')}
+\\end{document}
+`, outFile);
 }
 
 /**
- * Generates a PDF file that contains all the pages of all the input files concatenated, in order.
- * @param inFiles The paths of the PDF input files, in order
- * @param outFile The path of the output file to be generated
+ * Runs the specified LaTeX script, generating the PDF file outFile.
  */
-export async function concatPdfs(inFiles: string[], outFile: string): Promise<void> {
-    await $`qpdf --empty --pages ${inFiles.flatMap((f) => [f, '1-z'])} -- ${outFile}`;
+export async function runPdfLatex(script: string, outFile: string): Promise<void> {
+    const tmpDir = await dir({ ...TEMP_OPTIONS, postfix: 'pdflatex', unsafeCleanup: true });
+    try {
+        await fs.writeFile(`${tmpDir.path}/script.tex`, script);
+
+        // Print tex file to log
+        await $`cat ${tmpDir.path}/script.tex`;
+
+        await $`xelatex -halt-on-error -output-directory=${tmpDir.path} ${tmpDir.path}/script.tex`;
+        await $`mv ${tmpDir.path}/script.pdf ${outFile}`;
+    } finally {
+        if (!process.env.KEEP_TEMP) {
+            await tmpDir.cleanup();
+        }
+    }
 }

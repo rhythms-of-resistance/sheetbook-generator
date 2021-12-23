@@ -1,6 +1,6 @@
 FROM node:17-alpine AS base
 
-RUN apk add --no-cache qpdf texlive libreoffice-calc libreoffice-writer ttf-liberation inkscape bash ncurses msttcorefonts-installer git poppler-utils yarn \
+RUN apk add --no-cache qpdf texlive texlive-xetex libreoffice-calc libreoffice-writer ttf-liberation inkscape bash ncurses msttcorefonts-installer git poppler-utils yarn \
     && update-ms-fonts
 
 ENV TERM=xterm-256color
