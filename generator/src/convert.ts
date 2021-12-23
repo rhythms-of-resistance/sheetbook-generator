@@ -155,7 +155,7 @@ export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], o
 }
 
 \\begin{document}
-    ${inFiles.map((f, i) => f === BLANK ? '\\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}`).join('\n    ')}
+    ${inFiles.map((f, i) => f === BLANK ? '\\null \\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}`).join('\n    ')}
 \\end{document}
 `, outFile);
 }
