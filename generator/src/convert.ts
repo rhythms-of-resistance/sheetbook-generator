@@ -122,23 +122,20 @@ export async function scalePdfToA6Booklet(inFile: string, outFile: string): Prom
  * @param inFiles A list of PDF files or BLANK for empty pages.
  */
 export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], outFile: string): Promise<void> {
-    // Normally we would use the "book" document class and the \fancyfoot[LE,RO] position for the page numbers,
-    // but this will overlap with the content on rotated landscape pages. That's why for now we always put the
-    // page number on the top right.
     await runPdfLatex(
-`\\documentclass{article}
-\\usepackage[a4paper,top=2cm,bottom=2cm,left=2cm,right=2cm]{geometry}
+`\\documentclass{book}
+\\usepackage[a4paper,top=15mm,bottom=24mm,left=15mm,right=15mm]{geometry}
 \\usepackage[final]{pdfpages}
 \\usepackage{fancyhdr}
 \\usepackage{fontspec}
 \\setmainfont{Arial}
-\\setlength{\\topmargin}{-17pt}
 \\fancyhead{}
-\\fancyhead[R]{\\small \\thepage}
 \\fancyfoot{}
+\\fancyfoot[LE,RO]{\\small \\thepage}
 \\renewcommand{\\headrulewidth}{0pt}
 \\renewcommand{\\footrulewidth}{0pt}
 \\includepdfset{pages=-}
+\\pagestyle{fancy}
 
 % See https://tex.stackexchange.com/a/395847
 \\newsavebox{\\temp}
@@ -155,7 +152,7 @@ export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], o
 }
 
 \\begin{document}
-    ${inFiles.map((f, i) => f === BLANK ? '\\null \\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}`).join('\n    ')}
+    ${inFiles.map((f, i) => f === BLANK ? '\\null\\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}`).join('\n    ')}
 \\end{document}
 `, outFile);
 }
