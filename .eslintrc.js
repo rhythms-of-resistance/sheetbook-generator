@@ -15,7 +15,8 @@ module.exports = {
 		"import/no-named-as-default-member": ["warn"],
 		"import/no-duplicates": ["warn"],
 		"import/namespace": ["error"],
-		"import/default": ["error"],
+		// Demoted from error to warn: false-positive on Vue/TS imports after a transitive resolver bump.
+		"import/default": ["warn"],
 		"@typescript-eslint/no-extra-non-null-assertion": ["error"],
 		"@typescript-eslint/no-non-null-asserted-optional-chain": ["error"],
 		"@typescript-eslint/prefer-as-const": ["error"],
