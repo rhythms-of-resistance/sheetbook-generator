@@ -29,6 +29,7 @@ export default class SettingsForm extends Vue {
 	tuneset: 'no-ca' | 'all' | 'ca-booklet' | 'custom' = 'no-ca';
 	tunes: string[] = [];
 	tune: string = 'breaks';
+        version: boolean = false;
 	TUNE_SETS = TUNE_SETS;
 
 	isSubmitting = false;
@@ -82,12 +83,14 @@ export default class SettingsForm extends Vue {
 			const spec: SheetbookRequestSpec = this.format === 'single' ? {
 				type: SheetType.SINGLE,
 				tune: this.tune,
-				treeish: MAIN_BRANCH
+				treeish: MAIN_BRANCH,
+				version: this.version
 			} : {
 				type: SheetType.BOOKLET,
 				format: this.format === 'booklet-a6' ? SheetFormat.A6 : this.format === 'booklet-a5' ? SheetFormat.A5 : SheetFormat.A4,
 				tunes: this.tuneset === 'custom' ? this.tunes : this.tuneset,
-				treeish: MAIN_BRANCH
+				treeish: MAIN_BRANCH,
+				version: this.version
 			};
 
 			const downloadPath = await this.socket.createSheet(spec);

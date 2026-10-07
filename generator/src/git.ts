@@ -44,3 +44,13 @@ export async function gitLsTree(dir: string, treeish: string, { nameOnly }: {nam
     const result = await $`git -C ${dir} ls-tree ${nameOnly ? '--name-only' : []} ${treeish}`;
     return result.stdout.split('\n');
 }
+
+/**
+ * Return the last commit date from the given file in the repository.
+ * @param dir The directory of the git repository
+ * @param file The file to return the last commit date for
+ */
+export async function getCommitDate(dir: string, file: string): Promise<string> {
+    const result = await $`git -C ${dir} log -1 --pretty=format:'%cs' ${file}`;
+    return result.stdout;
+}

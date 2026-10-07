@@ -67,6 +67,48 @@ export async function scalePdfToA4(inFile: string, outFile: string): Promise<voi
 }
 
 /**
+ * Create a copy of the given PDF file scaled to A4 and with the version included.
+ * @param inFile The path of the PDF file to scale
+ * @param outFile The path of the scaled PDF file to be generated
+ * @param version The version to be included, if the string is undefined nothing is added
+ */
+export async function scalePdfToA4WithVersion(inFile: string, outFile: string, version: string | undefined): Promise<void> {
+    const isLandscape = await isLandscapePdf(inFile);
+    const versionText = version != undefined ? `Tune version: ${version}` : ''
+    await runPdfLatex(
+`\\documentclass{book}
+\\usepackage[a4paper,top=15mm,bottom=24mm,left=15mm,right=15mm,${isLandscape? ',landscape' : ''}]{geometry}
+\\usepackage[final]{pdfpages}
+\\usepackage{fancyhdr}
+\\usepackage{fontspec}
+\\setmainfont{Arial}
+\\newcommand{\\TheVersion}{}
+\\newcommand{\\Version}[1]{\\renewcommand{\\TheVersion}{#1}}
+\\fancyhead{}
+\\fancyfoot{}
+\\fancyfoot[R]{\\small ${versionText}}
+\\renewcommand{\\headrulewidth}{0pt}
+\\renewcommand{\\footrulewidth}{0pt}
+\\includepdfset{pages=-}
+\\pagestyle{fancy}
+
+% See https://tex.stackexchange.com/a/395847
+\\newsavebox{\\temp}
+\\newlength{\\tempwidth}
+\\newlength{\\tempheight}
+\\newcommand{\\addpdf}[1]{%
+    \\sbox{\\temp}{\\includegraphics{#1}}%
+    \\setlength{\\tempwidth}{\\widthof{\\usebox{\\temp}}}%
+    \\setlength{\\tempheight}{\\heightof{\\usebox{\\temp}}}%
+    \\includepdf[pagecommand=\\thispagestyle{fancy}]{#1}
+}
+
+\\begin{document}
+    \\addpdf{${inFile}}
+\\end{document}
+`, outFile);
+}
+/**
  * Arranges the pages of the given PDF file into an A5 booklet. The generated file will be in landscape A4 format, with each page
  * containing two pages of the input file scaled to portrait A5. The pages will be rearranged in such a way that when printing the
  * output file double-sided on A4, it can be bound into an A5 booklet. The page count of the input file needs to be dividable by 4.
@@ -116,12 +158,24 @@ export async function scalePdfToA6Booklet(inFile: string, outFile: string): Prom
 }
 
 /**
+ * Get the tune name from a filename by removing the path and extension
+ * @param file Filename to get the tune name from
+ */
+function getTuneFromFilename(file: string): string {
+    const parts = file.split(/[/.]+/)
+    return parts[parts.length - 2]
+}
+
+/**
  * Generates a PDF file that contains all the pages of all the input files concatenated, in order. Landscape pages
  * are rotated anti-clockwise, so all output pages are portrait. Pages are scaled to A4. Page numbers are added
- * on the top right of each page, except the first and last page.
+ * to each page, except the first and last page.
  * @param inFiles A list of PDF files or BLANK for empty pages.
+ * @param outFile Filename to write output to.
+ * @param tuneDates Map of tune name to dates to use as version number.
  */
-export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], outFile: string): Promise<void> {
+export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], outFile: string, tuneDates: Map<string, string>): Promise<void> {
+    const versions: Map<string, string> = new Map(inFiles.map((f, i) => tuneDates.has(getTuneFromFilename(f)) ? [f, `Tune version: ${tuneDates.get(getTuneFromFilename(f))}`] : [f, '']))
     await runPdfLatex(
 `\\documentclass{book}
 \\usepackage[a4paper,top=15mm,bottom=24mm,left=15mm,right=15mm]{geometry}
@@ -129,9 +183,12 @@ export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], o
 \\usepackage{fancyhdr}
 \\usepackage{fontspec}
 \\setmainfont{Arial}
+\\newcommand{\\TheVersion}{}
+\\newcommand{\\Version}[1]{\\renewcommand{\\TheVersion}{#1}}
 \\fancyhead{}
 \\fancyfoot{}
 \\fancyfoot[LE,RO]{\\small \\thepage}
+\\fancyfoot[LO,RE]{\\small \\TheVersion}
 \\renewcommand{\\headrulewidth}{0pt}
 \\renewcommand{\\footrulewidth}{0pt}
 \\includepdfset{pages=-}
@@ -141,18 +198,18 @@ export async function concatPdfsToPortraitA4WithPageNumbers(inFiles: string[], o
 \\newsavebox{\\temp}
 \\newlength{\\tempwidth}
 \\newlength{\\tempheight}
-\\newcommand{\\addpdf}[2][fancy]{%
+\\newcommand{\\addpdf}[3][fancy]{%
     \\sbox{\\temp}{\\includegraphics{#2}}%
     \\setlength{\\tempwidth}{\\widthof{\\usebox{\\temp}}}%
     \\setlength{\\tempheight}{\\heightof{\\usebox{\\temp}}}%
-
+    \\Version{#3}%
     \\ifthenelse{\\tempwidth > \\tempheight}
         {\\includepdf[pagecommand=\\thispagestyle{#1},angle=90]{#2}}
         {\\includepdf[pagecommand=\\thispagestyle{#1}]{#2}}
 }
 
 \\begin{document}
-    ${inFiles.map((f, i) => f === BLANK ? '\\null\\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}`).join('\n    ')}
+    ${inFiles.map((f, i) => f === BLANK ? '\\null\\newpage' : `\\addpdf${i === 0 || i === inFiles.length - 1 ? '[empty]' : ''}{${f}}{${versions.get(f)}}`).join('\n    ')}
 \\end{document}
 `, outFile);
 }

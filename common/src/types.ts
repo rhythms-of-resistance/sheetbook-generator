@@ -27,7 +27,8 @@ export const sheetFormatValidator = z.nativeEnum(SheetFormat);
 export const singleSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.SINGLE),
     tune: z.string(),
-    outFile: z.string()
+    outFile: z.string(),
+    version: z.boolean()
 });
 
 export type SingleSheetbookSpec = z.infer<typeof singleSheetbookSpecValidator>;
@@ -35,7 +36,8 @@ export type SingleSheetbookSpec = z.infer<typeof singleSheetbookSpecValidator>;
 export const multipleSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.MULTIPLE),
     tunes: z.string().or(z.array(z.string())),
-    outDir: z.string()
+    outDir: z.string(),
+    version: z.boolean()
 });
 
 export type multipleSheetbookSpec = z.infer<typeof multipleSheetbookSpecValidator>;
@@ -44,7 +46,8 @@ export const bookletSheetbookSpecValidator = z.object({
     type: z.literal(SheetType.BOOKLET),
     tunes: z.string().or(z.array(z.string())),
     format: sheetFormatValidator,
-    outFile: z.string()
+    outFile: z.string(),
+    version: z.boolean()
 });
 
 export type BookletSheetbookSpec = z.infer<typeof bookletSheetbookSpecValidator>;

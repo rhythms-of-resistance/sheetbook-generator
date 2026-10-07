@@ -60,6 +60,15 @@
 		</div>
 	</template>
 
+	<fieldset class="row mb-3">
+		<legend class="col-form-label col-sm-2 pt-0">Include tune version numbers</legend>
+		<div class="col-sm-10">
+			<div class="form-check">
+				<input class="form-check-input" :id="rsg-settings-form-version" type="checkbox" :value="1" v-model="version">
+			</div>
+		</div>
+	</fieldset>
+
 	<button type="submit" class="btn btn-primary" :disabled="isSubmitting">
 		<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" v-show="isSubmitting"></span>
 		Generate

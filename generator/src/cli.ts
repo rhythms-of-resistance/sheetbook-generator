@@ -10,6 +10,7 @@ import { OUTPUT_FILENAME, TUNE_SETS } from '../../config';
 
 const args = yargs(hideBin(process.argv))
     .strict(true)
+    .version(false)
     .usage("Usage: $0 -i <sheetbook dir> -o <output dir> <specification...>")
     .option("sheetbook", {
         alias: "i",
@@ -28,15 +29,21 @@ const args = yargs(hideBin(process.argv))
         describe: "Keep temporary files.",
         type: "boolean"
     })
+    .option("version", {
+        alias: "v",
+        describe: "Include version numbers for the tunes.",
+        type: "boolean"
+    })
+    .default("version", false)
     .demandCommand(1, 'At least 1 specification needs to be passed.')
     .epilogue(
         'The sheetbook specification can be one or multiple of:\n' +
         'single:<tunes>           to generate single-tune A4 PDFs, for example\n' +
         '                         single:all, single:no-ca or single:angela-davis,funk\n' +
-        'booklet:<format>:<tunes> to generate a booklet, for example booklet:A4:all,\n' +
-        '                         booklet:A5:no-ca or booklet:A6:breaks,network,angela-davis,funk,dances\n' +
+        'booklet:<format>:<tunes> to generate a booklet, for example booklet:a4:all,\n' +
+        '                         booklet:a5:no-ca or booklet:a6:breaks,network,angela-davis,funk,dances\n' +
         '\n' +
-        '<format> can be A4 (booklet of portrait A4 pages), A5 (booklet with two A5 portrait pages per landscape A4 page) or A6 (double booklet with four portrait A6 pages per portrait A4 page).\n' +
+        '<format> can be a4 (booklet of portrait A4 pages), a5 (booklet with two A5 portrait pages per landscape A4 page) or a6 (double booklet with four portrait A6 pages per portrait A4 page).\n' +
         '\n' +
         `<tunes> can be ${Object.entries(TUNE_SETS).map(([k, v]) => `"${k}" (${v.label})`).join(', ')} or a list of tunes (comma-separated).\n` +
         '\n' +
@@ -45,7 +52,7 @@ const args = yargs(hideBin(process.argv))
     )
     .parse();
 
-function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpec[] {
+function argsToSpecs(cmds: Array<string | number>, outDir: string, version: boolean): SheetbookSpec[] {
     let customCounter = 0;
 
     return cmds.map((cmd): SheetbookSpec => {
@@ -54,7 +61,8 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
             return {
                 type: SheetType.MULTIPLE,
                 tunes: Object.keys(TUNE_SETS).includes(split[1]) ? split[1] : split[1].split(','),
-                outDir: `${outDir}/single`
+                outDir: `${outDir}/single`,
+                version: version
             };
         } else if (split[0] === 'booklet') {
             if (!Object.values(SheetFormat).includes(split[1] as SheetFormat)) {
@@ -64,7 +72,8 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
             const spec = {
                 type: SheetType.BOOKLET as const,
                 tunes: Object.prototype.hasOwnProperty.call(TUNE_SETS, split[2]) ? split[2] : split[2].split(','),
-                format: split[1] as SheetFormat
+                format: split[1] as SheetFormat,
+                version: version
             };
 
             return {
@@ -84,7 +93,7 @@ function argsToSpecs(cmds: Array<string | number>, outDir: string): SheetbookSpe
         tmp.setGracefulCleanup();
     }
 
-    const specs = argsToSpecs(args._, args.outdir);
+    const specs = argsToSpecs(args._, args.outdir, args.version);
 
     await mkdirp(specs.some((spec) => spec.type === SheetType.MULTIPLE) ? `${args.outdir}/single` : args.outdir);
 
